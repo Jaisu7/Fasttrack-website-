@@ -218,12 +218,17 @@ export function createProductModel(id: string): ProductModel {
     for (const x of [-1.08, 1.08])
       for (const z of [-0.39, 0.39]) bolt([x, 0.3, z + 0.03]);
     box([2.2, 0.045, 0.035], [0, 1.33, -0.37]);
-  } else if (id === "sink") {
+  } else if (id === "sink" || id === "sink-shelf") {
     legs(2.17, 0.78, 1.35);
     for (const z of [-0.39, 0.39])
       rod([-1.08, 0.28, z], [1.08, 0.28, z], 0.022);
     for (const x of [-1.08, 1.08])
       rod([x, 0.28, -0.39], [x, 0.28, 0.39], 0.022);
+    if (id === "sink-shelf") {
+      const lowerShelf = tray(2.08, 0.73, 0.25);
+      lowerShelf.name = "sink-lower-shelf";
+      explode(lowerShelf, [0, 0.12, 0.38]);
+    }
     const basinAssembly = new THREE.Group();
     group.add(basinAssembly);
     const topShape = roundedRect(-1.23, -0.52, 2.46, 1.04, 0.025);
@@ -391,7 +396,7 @@ export function createProductModel(id: string): ProductModel {
       });
     });
     operationContinuous = true;
-  } else if (id === "shelves") {
+  } else if (id === "rack") {
     legs(1.96, 0.7, 2.43);
     for (let i = 0; i < 4; i++) {
       const y = 0.25 + i * 0.69;
@@ -402,6 +407,118 @@ export function createProductModel(id: string): ProductModel {
     }
     rod([-0.98, 0.25, -0.36], [0.98, 2.3, -0.36], 0.009, polished);
     rod([0.98, 0.25, -0.36], [-0.98, 2.3, -0.36], 0.009, polished);
+  } else if (id === "shelves") {
+    // Wall fixing rails and triangular brackets distinguish shelves from a rack.
+    for (const x of [-0.88, 0.88]) {
+      box([0.065, 1.62, 0.04], [x, 1.08, -0.32]);
+      for (const y of [0.4, 1.04, 1.76]) bolt([x, y, -0.29]);
+    }
+    for (let i = 0; i < 2; i++) {
+      const y = 0.76 + i * 0.84;
+      const shelf = tray(2.3, 0.68, y);
+      shelf.name = `wall-shelf-${i}`;
+      explode(shelf, [0, 0.18 + i * 0.15, 0.24]);
+      for (const x of [-0.88, 0.88]) {
+        box([0.04, 0.04, 0.59], [x, y - 0.065, -0.015]);
+        rod([x, y - 0.42, -0.29], [x, y - 0.065, 0.27], 0.016);
+      }
+      box([2.3, 0.11, 0.022], [0, y + 0.05, -0.329]);
+    }
+  } else if (id === "produce-shelf") {
+    const frame = new THREE.Group();
+    frame.name = "produce-display-frame";
+    group.add(frame);
+    for (const x of [-1.11, 1.11]) {
+      box([0.06, 1.9, 0.06], [x, 1.02, -0.47], steel, frame);
+      box([0.06, 0.56, 0.06], [x, 0.35, 0.65], steel, frame);
+      rod([x, 0.12, -0.47], [x, 0.12, 0.65], 0.025, steel, frame);
+      rod([x, 0.58, 0.63], [x, 1.92, -0.44], 0.025, steel, frame);
+      for (const z of [-0.47, 0.65])
+        cylinder(0.04, 0.06, [x, 0.04, z], rubber, frame);
+    }
+    const produceMaterials = [0xc8452e, 0x77a142, 0xe3b448].map(
+      (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.72 }),
+    );
+    for (let tier = 0; tier < 3; tier++) {
+      const bins = new THREE.Group();
+      bins.name = `produce-bin-tier-${tier}`;
+      bins.position.set(0, 0.55 + tier * 0.61, 0.4 - tier * 0.36);
+      group.add(bins);
+      for (let column = 0; column < 3; column++) {
+        const x = (column - 1) * 0.73;
+        const bin = shallowPan(0.69, 0.54, [x, 0, 0], bins);
+        // Raised lips retain the illustrative produce without implying a load rating.
+        box([0.69, 0.12, 0.018], [0, 0.075, 0.26], steel, bin);
+        for (let item = 0; item < 6; item++) {
+          const fruit = mesh(
+            new THREE.SphereGeometry(0.073, 12, 8),
+            produceMaterials[(tier + column) % 3],
+            bin,
+          );
+          fruit.position.set((item % 3 - 1) * 0.18, 0.09, Math.floor(item / 3) * 0.18 - 0.09);
+          if (tier === 1) fruit.scale.set(1, 0.7, 1.25);
+        }
+      }
+      explode(bins, [0, 0.15 + tier * 0.12, 0.28]);
+    }
+  } else if (id === "refrigerator" || id === "hot-cabinet") {
+    const hot = id === "hot-cabinet";
+    const width = hot ? 1.18 : 1.72;
+    const depth = 1.04;
+    const baseY = 0.21, topY = 2.5;
+    legs(width - 0.15, depth - 0.2, 0.2);
+    const shell = new THREE.Group();
+    shell.name = `${id}-shell`;
+    group.add(shell);
+    for (const sign of [-1, 1]) {
+      const side = box([0.055, topY - baseY, depth], [sign * (width / 2 - 0.0275), (baseY + topY) / 2, 0], steel, shell);
+      explode(side, [sign * 0.3, 0.08, 0]);
+    }
+    const back = box([width - 0.1, topY - baseY, 0.04], [0, (baseY + topY) / 2, -0.5], steel, shell);
+    explode(back, [0, 0.08, -0.25]);
+    box([width - 0.08, 0.05, depth - 0.06], [0, baseY, 0], steel, shell);
+    const top = box([width, 0.06, depth], [0, topY, 0], steel, shell);
+    explode(top, [0, 0.35, 0]);
+    // Shelves remain inside the assembled shell with a gap behind the closed door.
+    const shelfWidth = width - 0.17;
+    for (let level = 0; level < (hot ? 5 : 4); level++) {
+      const shelf = tray(shelfWidth, 0.85, 0.52 + level * (hot ? 0.33 : 0.43), shell);
+      shelf.name = `${id}-internal-shelf-${level}`;
+      explode(shelf, [0, 0.1 + level * 0.07, 0.2]);
+      for (const sign of [-1, 1])
+        box([0.025, 0.028, 0.87], [sign * (shelfWidth / 2), 0.47 + level * (hot ? 0.33 : 0.43), 0], polished, shell);
+    }
+    box([width - 0.11, 0.2, 0.06], [0, 2.33, 0.5], dark, shell);
+    const screen = new THREE.MeshStandardMaterial({ color: 0x1c2c27, roughness: 0.36 });
+    box([0.26, 0.09, 0.014], [hot ? 0.18 : 0.4, 2.33, 0.541], screen, shell);
+    for (let i = 0; i < 4; i++)
+      box([0.18, 0.01, 0.018], [hot ? -0.24 : -0.4, 2.28 + i * 0.035, 0.54], polished, shell);
+    const doorCount = hot ? 1 : 2;
+    for (let index = 0; index < doorCount; index++) {
+      const sign = hot ? -1 : index === 0 ? -1 : 1;
+      const doorWidth = (width - 0.14) / doorCount;
+      const doorHeight = 1.94;
+      const hinge = new THREE.Group();
+      hinge.name = `${id}-door-${index}`;
+      hinge.position.set(sign * (width / 2 - 0.065), 1.23, 0.535);
+      shell.add(hinge);
+      const doorCenter = -sign * doorWidth / 2;
+      if (hot) {
+        box([doorWidth - 0.13, doorHeight - 0.22, 0.018], [doorCenter, 0, 0], glass, hinge);
+        for (const edge of [-1, 1]) {
+          box([0.07, doorHeight, 0.055], [doorCenter + edge * (doorWidth / 2 - 0.035), 0, 0], steel, hinge);
+          box([doorWidth, 0.09, 0.055], [doorCenter, edge * (doorHeight / 2 - 0.045), 0], steel, hinge);
+        }
+      } else {
+        box([doorWidth - 0.01, doorHeight, 0.065], [doorCenter, 0, 0], steel, hinge, 0.016);
+      }
+      const handleX = doorCenter - sign * (doorWidth / 2 - 0.13);
+      rod([handleX, -0.26, 0.09], [handleX, 0.26, 0.09], 0.019, polished, hinge);
+      for (const y of [-0.26, 0.26])
+        rod([handleX, y, 0.025], [handleX, y, 0.09], 0.013, polished, hinge);
+      explode(hinge, [sign * 0.16, 0, 0.3]);
+      actions.push((value) => { hinge.rotation.y = sign * value * Math.PI * 0.48; });
+    }
   } else if (id === "cabinets") {
     legs(2.12, 0.78, 0.2);
     const shell = new THREE.Group();
@@ -416,6 +533,7 @@ export function createProductModel(id: string): ProductModel {
     }
     box([2.27, 0.035, 0.93], [0, 0.23, 0], steel, shell);
     const shelf = tray(2.24, 0.88, 0.81, shell);
+    shelf.name = "cabinet-internal-shelf";
     explode(shelf, [0, 0.18, 0.28]);
     const splash = box([2.4, 0.19, 0.027], [0, 1.56, -0.5], steel, shell);
     explode(splash, [0, 0.35, -0.15]);

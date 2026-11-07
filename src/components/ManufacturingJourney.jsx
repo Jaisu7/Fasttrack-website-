@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUpRight, Pause, Play } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Pause, Play, RotateCcw } from "lucide-react";
 import { manufacturingState } from "../lib/journey-state.mjs";
 export const journeyStages = [
   {
@@ -152,6 +152,13 @@ export default function ManufacturingJourney() {
     engine.current?.pause(value);
     if (!value && trigger.current) show(trigger.current.progress);
   }
+  function skip(event) {
+    event.preventDefault();
+    document.getElementById("studio")?.scrollIntoView({
+      behavior: reduced ? "instant" : "smooth",
+    });
+    document.getElementById("studio")?.focus({ preventScroll: true });
+  }
   const s = journeyStages[stage];
   return (
     <section
@@ -187,6 +194,7 @@ export default function ManufacturingJourney() {
         <div className="journey-shade" />
         <div className="journey-copy" key={stage}>
           <div className="journey-text">
+            <p className="journey-stage-label">0{stage + 1} / 06 · {s.name}</p>
             <h1
               aria-label={s.title}
               className={stage === 0 ? "hero-title" : "stage-title"}
@@ -224,12 +232,10 @@ export default function ManufacturingJourney() {
           </div>
         </div>
         <div className="journey-tools">
-          <a href="#studio" className="subtle-link">
-            Skip journey <ArrowDown size={14} />
-          </a>
           <button
-            className="icon-button"
+            className="journey-control"
             onClick={toggle}
+            disabled={!ready || fallback || reduced}
             aria-label={
               paused
                 ? "Resume manufacturing animation"
@@ -238,7 +244,14 @@ export default function ManufacturingJourney() {
             aria-pressed={paused}
           >
             {paused ? <Play size={17} /> : <Pause size={17} />}
+            {paused ? "Resume animation" : "Pause animation"}
           </button>
+          <button className="journey-control journey-restart" onClick={() => select(0)} aria-label="Restart manufacturing journey">
+            <RotateCcw size={16} /> Restart
+          </button>
+          <a href="#studio" className="journey-control journey-skip" onClick={skip}>
+            Skip intro <ArrowDown size={16} />
+          </a>
         </div>
         <div className="journey-bottom">
           <div className="stage-rail" aria-label="Manufacturing stages">
@@ -256,7 +269,7 @@ export default function ManufacturingJourney() {
           <div className="journey-caption">
             <span>Fastrack — Engineered in Steel.</span>
             <span className="scroll-hint">
-              {reduced ? "Select a stage to explore" : "Scroll to manufacture"}{" "}
+              {reduced ? "Select a stage to explore" : paused ? "Animation paused · Resume when ready" : "Scroll to manufacture"}{" "}
               <ArrowDown size={17} />
             </span>
           </div>

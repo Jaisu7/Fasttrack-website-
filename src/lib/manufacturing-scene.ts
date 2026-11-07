@@ -7,6 +7,8 @@ import {
   clampProgress,
   manufacturingState,
   smoothRange,
+  cabinetInterior,
+  interiorShelfState,
 } from "./journey-state.mjs";
 
 type Vec3 = [number, number, number];
@@ -506,7 +508,7 @@ export function createManufacturingScene(
   );
   const basePanel = box([2.0, 0.035, 0.7], [0, -0.65, 0.35], steel, additional);
   const shelfPanel = box(
-    [1.96, 0.027, 0.65],
+    cabinetInterior.shelfSize as Vec3,
     [0, -0.06, 0.35],
     steel,
     additional,
@@ -891,11 +893,9 @@ export function createManufacturingScene(
       0.35 - (1 - parts) * 0.4,
     );
     basePanel.position.set((1 - parts) * 1.9, -0.65, 0.35 + (1 - parts) * 0.5);
-    shelfPanel.position.set(
-      -(1 - parts) * 1.7,
-      -0.06 + (1 - parts) * 0.4,
-      0.35 + (1 - parts) * 0.8,
-    );
+    const shelf = interiorShelfState(progress);
+    shelfPanel.visible = shelf.visible;
+    shelfPanel.position.set(...(shelf.position as Vec3));
     for (const { root, sign } of doors) {
       root.visible = state.doors > 0.001;
       root.position.set(
@@ -996,6 +996,7 @@ export function createManufacturingScene(
     canvas.dataset.punched = String(holes);
     canvas.dataset.foldLeft = state.foldLeft.toFixed(3);
     canvas.dataset.foldRight = state.foldRight.toFixed(3);
+    canvas.dataset.shelf = shelf.visible ? "inside-cabinet" : "not-installed";
     if (
       state.stage !== lastStage ||
       Math.abs(progress - lastReported) > 0.003

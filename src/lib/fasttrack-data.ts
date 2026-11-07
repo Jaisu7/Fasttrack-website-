@@ -15,11 +15,12 @@ export type Product = {
   detail: string;
   options: string[];
   illustrative?: boolean;
+  operation?: "doors" | "lights" | "water";
 };
 export const products: Product[] = [
   {
     id: "worktable",
-    name: "Worktables & preparation",
+    name: "SS preparation tables",
     category: "Kitchen equipment",
     image: "/images/worktable.webp",
     description: "Purpose-built surfaces for busy kitchens.",
@@ -31,6 +32,28 @@ export const products: Product[] = [
       "Dimensions to suit your layout",
     ],
     illustrative: true,
+  },
+  {
+    id: "refrigerator",
+    name: "Upright refrigerators",
+    category: "Display & refrigeration",
+    image: "/images/project-11.png",
+    description: "Cold storage around your kitchen workflow.",
+    detail: "Explore a representative upright refrigerator with opening doors and internal shelves. Capacity, cooling performance, dimensions and equipment specification must be confirmed for your project.",
+    options: ["Upright cold storage", "Internal shelving", "Cooling requirements reviewed per project"],
+    illustrative: true,
+    operation: "doors",
+  },
+  {
+    id: "hot-cabinet",
+    name: "Hot holding cabinets",
+    category: "Kitchen equipment",
+    image: "/images/project-11.png",
+    description: "A considered place for prepared food.",
+    detail: "A hot holding cabinet concept with a glazed door and tray positions. Share your foodservice workflow so temperature requirements, controls and final equipment specification can be reviewed.",
+    options: ["Food holding cabinet layouts", "Tray arrangements", "Operating requirements reviewed per project"],
+    illustrative: true,
+    operation: "doors",
   },
   {
     id: "display",
@@ -46,6 +69,7 @@ export const products: Product[] = [
       "Equipment requirements reviewed per project",
     ],
     illustrative: true,
+    operation: "lights",
   },
   {
     id: "sink",
@@ -61,20 +85,53 @@ export const products: Product[] = [
       "Layout coordinated with site services",
     ],
     illustrative: true,
+    operation: "water",
   },
   {
-    id: "shelves",
-    name: "Storage & shelving",
+    id: "sink-shelf",
+    name: "Sinks with lower shelves",
+    category: "Kitchen equipment",
+    image: "/images/sink.webp",
+    description: "Washing and open storage in one station.",
+    detail: "A sink station concept with a distinct lower storage shelf. Bowl layout, drainage, shelf clearance and installation requirements are coordinated around your space.",
+    options: ["Sink and lower shelf arrangement", "Open under-sink storage", "Site services coordination"],
+    illustrative: true,
+    operation: "water",
+  },
+  {
+    id: "rack",
+    name: "Freestanding storage racks",
     category: "Storage",
     image: "/images/storage.jpg",
     description: "Make better use of every square metre.",
     detail:
-      "Shelving and storage solutions for back-of-house operations and retail environments. Discuss your available space, storage items, access and finish requirements with the team.",
+      "Freestanding multi-tier rack concepts for back-of-house storage. Discuss available space, stored items and access with the team; loading and final construction require project review.",
     options: [
       "Storage and display shelving",
       "Layouts for kitchens and retail",
       "Configuration to suit your space",
     ],
+    illustrative: true,
+  },
+  {
+    id: "shelves",
+    name: "Wall-mounted shelves",
+    category: "Storage",
+    image: "/images/storage.jpg",
+    description: "Useful storage above your working surface.",
+    detail: "Wall-mounted stainless-steel shelf concepts with support brackets. Wall construction, fixings, usable clearance and loading must be assessed before installation.",
+    options: ["Wall shelf layouts", "Support brackets", "Fixings and loading reviewed for installation"],
+    illustrative: true,
+  },
+  {
+    id: "produce-shelf",
+    name: "Fruit & vegetable shelves",
+    category: "Storage",
+    image: "/images/storage.jpg",
+    description: "Open, organised produce presentation.",
+    detail: "A stepped fruit and vegetable display concept with separate produce bins. Shelf arrangement, cleaning access and the final retail layout are developed for your project.",
+    options: ["Tiered produce bins", "Open retail presentation", "Project-specific shelf layouts"],
+    illustrative: true,
   },
   {
     id: "cabinets",
@@ -89,6 +146,8 @@ export const products: Product[] = [
       "Enclosed undercounter storage",
       "Project-specific dimensions",
     ],
+    illustrative: true,
+    operation: "doors",
   },
   {
     id: "custom",
@@ -103,6 +162,7 @@ export const products: Product[] = [
       "Sheet metal fabrication",
       "Drawing and specification review",
     ],
+    illustrative: true,
   },
 ];
 export const processes = [

@@ -137,7 +137,7 @@ export function createProductViewer(
   );
   let operationFitScale = 1,
     combinedFitScale = assemblyFitScale;
-  if (productId === "cabinets") {
+  if (["cabinets", "refrigerator", "hot-cabinet"].includes(productId)) {
     model.animate(0, 1, 0, false);
     const openSphere = new THREE.Box3()
       .setFromObject(model.group)

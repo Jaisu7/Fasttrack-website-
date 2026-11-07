@@ -66,11 +66,11 @@ function ProductViewer({ product }) {
     setFinish(0);
   }
   const action =
-    product.id === "cabinets"
+    product.operation === "doors"
       ? { label: "Open doors", Icon: DoorOpen }
-      : product.id === "display"
+      : product.operation === "lights"
         ? { label: "Display lights", Icon: Lightbulb }
-        : product.id === "sink"
+        : product.operation === "water"
           ? { label: "Water flow", Icon: Droplets }
           : null;
   return (
@@ -210,7 +210,7 @@ export default function ProductShowroom({ onEnquire }) {
           <br />
           you work.
         </h2>
-        <p>Explore our product families in 360°.</p>
+        <p>Explore {products.length} equipment concepts in 360°.</p>
       </div>
       <div className="tab-rail category-rail" aria-label="Product categories">
         {categories.map((c) => (
@@ -246,6 +246,9 @@ export default function ProductShowroom({ onEnquire }) {
           <p className="quiet concept-note">
             Representative 3D concepts. Final design, dimensions and equipment
             specifications are reviewed for your project.
+            {!["worktable", "sink", "display", "cabinets", "custom"].includes(product.id)
+              ? " Image fallback represents the product family rather than this exact model."
+              : ""}
           </p>
         </div>
       </div>

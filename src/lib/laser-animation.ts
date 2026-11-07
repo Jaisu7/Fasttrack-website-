@@ -35,6 +35,7 @@ export interface LaserEngine {
   nudge(dx: number, dy: number): void;
   pause(paused: boolean): void;
   reset(): void;
+  automatic(): void;
   destroy(): void;
 }
 
@@ -45,6 +46,7 @@ export function createLaserAnimation(
     mode: (manual: boolean) => void;
     reduced: (value: boolean) => void;
     unavailable: () => void;
+    cycle?: (phase: string, index: number) => void;
   },
 ): LaserEngine {
   const context = canvas.getContext("2d", { alpha: false });
@@ -55,7 +57,14 @@ export function createLaserAnimation(
       leave() {},
       nudge() {},
       pause() {},
-      reset() {},
+      automatic() {
+      manualUntil = 0;
+      setManual(false);
+      tiltTargetX = tiltTargetY = 0;
+      wake();
+    },
+    reset() {},
+      automatic() {},
       destroy() {},
     };
   }
@@ -72,12 +81,12 @@ export function createLaserAnimation(
   let animation = 0,
     lastTime = 0,
     progress = 0,
-    completedHold = 0,
     width = 1,
     height = 1,
     viewHeight = 800,
     offset = -150;
-  let previousPhase = "working";
+  let previousPhase = "";
+  let reportedCycle = "";
   let elapsed = 0,
     pieceShift = 0,
     pieceIndex = 0;
@@ -190,7 +199,8 @@ export function createLaserAnimation(
     ctx.setTransform(canvas.width / 1000, 0, 0, canvas.width / 1000, 0, 0);
     ctx.fillStyle = "#102a26";
     ctx.fillRect(0, 0, 1000, viewHeight);
-    if (dt) elapsed += dt;
+    // Manual guidance holds the programmed path; it never cuts elsewhere at the same time.
+    if (dt && (manualUntil <= time || previousPhase !== "working")) elapsed += dt;
     const cycle = workpieceCycle(elapsed, 13, viewHeight + 450);
     if (
       cycle.index !== pieceIndex ||
@@ -200,12 +210,16 @@ export function createLaserAnimation(
       traces.length = sparks.length = 0;
     }
     previousPhase = cycle.phase;
+    const report = `${reduced ? "complete" : cycle.phase}:${cycle.index}`;
+    if (report !== reportedCycle) {
+      reportedCycle = report;
+      callbacks.cycle?.(reduced ? "complete" : cycle.phase, cycle.index);
+    }
     pieceShift = reduced ? 0 : cycle.shift;
     drawWorkpieceBed(ctx, bed, offset, pieceShift);
     const manual = manualUntil > time && !reduced && cycle.phase === "working";
     setManual(manual);
     progress = reduced ? totalLength : totalLength * cycle.progress;
-    completedHold = cycle.phase === "working" ? 0 : 1;
     const path = pathAt(progress),
       target = projectPlate(
         cycle.phase === "working"
@@ -215,7 +229,7 @@ export function createLaserAnimation(
           : { x: 0.87, y: 0.16 },
         offset - (cycle.phase === "working" ? 0 : 70),
       );
-    const easing = dt ? 1 - Math.exp(-dt * (manual ? 10 : 18)) : 1;
+    const easing = dt && manual ? 1 - Math.exp(-dt * 12) : 1;
     if (!paused) {
       current.x += (target.x - current.x) * easing;
       current.y += (target.y - current.y) * easing;
@@ -230,7 +244,13 @@ export function createLaserAnimation(
     ctx.translate(0, -1.4);
     strokeCompleted(complete, 1.2, "rgba(221,214,190,.78)");
     ctx.restore();
-    if (!reduced) strokeCompleted(complete, 1.8, "rgba(255,178,91,.65)", 5);
+    // The cut cools behind the head instead of glowing across the whole completed logo.
+    if (cutting) {
+      ctx.save();
+      ctx.globalAlpha = 0.45;
+      strokeCompleted(complete, 1.2, "rgba(245,178,91,.3)");
+      ctx.restore();
+    }
 
     // Manual cuts remain on the sheet for a short time, with a bounded trace buffer.
     if (
@@ -287,7 +307,7 @@ export function createLaserAnimation(
       ctx.restore();
     }
 
-    const headHeight = Math.min(590, Math.max(365, viewHeight - 330)),
+    const headHeight = Math.min(470, Math.max(320, viewHeight - 350)),
       headWidth = headHeight * (head.width / head.height);
     ctx.drawImage(
       head,
@@ -465,10 +485,16 @@ export function createLaserAnimation(
       draw(performance.now(), 0);
       wake();
     },
+    automatic() {
+      manualUntil = 0;
+      setManual(false);
+      tiltTargetX = tiltTargetY = 0;
+      wake();
+    },
     reset() {
       progress = 0;
       elapsed = pieceShift = pieceIndex = 0;
-      completedHold = 0;
+      previousPhase = reportedCycle = "";
       manualUntil = 0;
       traces.length = 0;
       sparks.length = 0;

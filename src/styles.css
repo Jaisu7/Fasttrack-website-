@@ -1841,3 +1841,65 @@ pre:focus-visible {
     transform: none;
   }
 }
+
+/* Persistent, labelled controls for the manufacturing introduction. */
+.journey-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 11px 15px;
+  color: #f3f7f3;
+  background: #17231fe8;
+  border: 1px solid #64786e;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+.journey-control:hover { background: #294336; border-color: var(--accent); }
+.journey-control[aria-pressed="true"] { background: #d4e9cc; color: #16291d; }
+.journey-control:disabled { opacity: .5; cursor: default; }
+.journey-skip { color: #d5edc8; border-color: #92ac83; }
+.journey-tools { gap: 8px; }
+.journey-text > .journey-stage-label {
+  color: #b7d6a4;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  margin: 0 0 18px;
+}
+.production-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 12px;
+}
+.production-steps li {
+  padding-top: 10px;
+  border-top: 2px solid #3f5147;
+  color: #899f92;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.production-steps li.active { border-color: #c4e6ad; color: #e5f4dc; }
+.production-steps li.done { border-color: #87a776; color: #b4c9a9; }
+.cycle-count, .process-demo-mode { font-size: 11px; color: #acc0b1; line-height: 1.6; }
+@media (min-width: 721px) {
+  .product-list { max-height: 580px; overflow-y: auto; scrollbar-width: thin; }
+}
+@media (max-width: 720px) {
+  .journey-tools { left: var(--gutter); right: var(--gutter); justify-content: flex-end; top: 89px; }
+  .journey-control { font-size: 11px; min-height: 40px; padding: 9px 12px; }
+  .journey-restart { display: none; }
+  .journey-copy { padding-top: 153px; }
+  .journey-text > .journey-stage-label { font-size: 9px; margin-bottom: 12px; }
+  .production-steps { width: 100%; margin: 4px 0 0; }
+  .cycle-count, .process-demo-mode { flex-basis: 100%; }
+}

@@ -14,6 +14,26 @@ export const smoothRange = (value, start, end) => {
   return t * t * (3 - 2 * t);
 };
 
+// Cabinet coordinates after the primary panel has been stood upright.
+// Shelves are revealed within the open shell, never passed through a side wall.
+export const cabinetInterior = {
+  halfWidth: 1,
+  bottom: -0.65,
+  top: 0.65,
+  back: 0.022,
+  front: 0.7,
+  shelfSize: [1.88, 0.027, 0.59],
+};
+export function interiorShelfState(value) {
+  const p = clampProgress(value);
+  const installed = smoothRange(p, 0.699, 0.732);
+  return {
+    visible: p >= 0.699,
+    position: [0, -0.38 + installed * 0.32, 0.35],
+    installed,
+  };
+}
+
 /** Scroll-driven demonstration, tracking one primary panel plus separately assembled parts. */
 export function manufacturingState(value) {
   const progress = clampProgress(value);

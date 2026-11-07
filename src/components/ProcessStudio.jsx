@@ -5,17 +5,17 @@ const processes = [
     id: "laser",
     tab: "Laser cutting",
     title: "CNC laser cutting",
-    copy: "The original Fastrack mark, traced in steel.",
+    copy: "A focused beam traces the Fastrack mark, then lifts clear for the finished sheet to leave.",
     instruction:
-      "Move across the scene to guide the head. Use arrow keys for precise control.",
+      "Move across the sheet to guide a cut. The automatic toolpath waits while you guide the head. Use arrow keys for precise control.",
   },
   {
     id: "punching",
     tab: "CNC punching",
     title: "Precision in every stroke.",
-    copy: "A sequence of punched holes follows the original Fastrack emblem.",
+    copy: "Position. Clamp. Punch. The ram retracts before the next opening is positioned.",
     instruction:
-      "Guide the tool across the sheet. The head lifts before travelling to its next position.",
+      "Move to choose the next punch position. The tool finishes each stroke before moving sideways. Arrow keys also guide the tool.",
   },
   {
     id: "bending",
@@ -42,7 +42,8 @@ function ProcessScene({ process }) {
     [failed, setFailed] = useState(false),
     [paused, setPaused] = useState(false),
     [manual, setManual] = useState(false),
-    [reduced, setReduced] = useState(false);
+    [reduced, setReduced] = useState(false),
+    [cycle, setCycle] = useState({ phase: "working", index: 0 });
   useEffect(() => {
     let alive = true,
       observer;
@@ -58,6 +59,7 @@ function ProcessScene({ process }) {
           mode: (v) => alive && setManual(v),
           reduced: (v) => alive && setReduced(v),
           unavailable: () => alive && setFailed(true),
+          cycle: (phase, index) => alive && setCycle({ phase, index }),
         };
         engine.current =
           process.id === "laser"
@@ -92,6 +94,10 @@ function ProcessScene({ process }) {
     engine.current?.reset();
     setManual(false);
   };
+  const automatic = () => {
+    engine.current?.automatic();
+    setManual(false);
+  };
   function key(e) {
     const v = {
       ArrowLeft: [-0.025, 0],
@@ -124,28 +130,39 @@ function ProcessScene({ process }) {
               aria-pressed={paused}
             >
               {paused ? <Play size={17} /> : <Pause size={17} />}{" "}
-              {paused ? "Play" : "Pause"}
+              {paused ? "Resume animation" : "Pause animation"}
             </button>
             <button
               className="button button-outline"
               disabled={!ready}
               onClick={reset}
             >
-              <RotateCcw size={17} /> Reset
+              <RotateCcw size={17} /> Restart cycle
             </button>
           </div>
+          <button className="subtle-link process-demo-mode" onClick={automatic} disabled={!ready || reduced || !manual}>
+            Return to automatic cycle
+          </button>
+          <ol className="production-steps" aria-label="Production cycle">
+            {[ ["working", "Working"], ["complete", "Finished"], ["ejecting", "Release"], ["loading", "New sheet"] ].map(([phase, label], i, items) => (
+              <li key={phase} className={cycle.phase === phase ? "active" : items.findIndex(([p]) => p === cycle.phase) > i ? "done" : ""} aria-current={cycle.phase === phase ? "step" : undefined}>
+                <span>{String(i + 1).padStart(2, "0")}</span>{label}
+              </li>
+            ))}
+          </ol>
+          <p className="quiet cycle-count">Cycle {cycle.index + 1} Â· One piece at a time</p>
           <p className="quiet process-status" aria-live="polite">
             {failed
               ? "Still preview"
               : !ready
-                ? "Loading process…"
+                ? "Loading processâ€¦"
                 : reduced
-                  ? "Reduced motion · Finished workpiece"
+                  ? "Reduced motion Â· Finished workpiece"
                   : paused
                     ? "Animation paused"
                     : manual
                       ? "Manual tool guidance"
-                      : "Finish → release → fresh blank"}
+                      : "Finish â†’ release â†’ fresh blank"}
           </p>
         </div>
       </div>
@@ -158,6 +175,7 @@ function ProcessScene({ process }) {
           }}
           onPointerDown={(e) => engine.current?.point(e.clientX, e.clientY)}
           onPointerLeave={() => engine.current?.leave()}
+          onPointerUp={(e) => { if (e.pointerType === "touch") engine.current?.leave(); }}
         >
           <img
             className={ready && !failed ? "hidden" : ""}
@@ -179,7 +197,7 @@ function ProcessScene({ process }) {
           />
         </div>
         <div className="media-caption">
-          <span>Illustrative process · Sound off</span>
+          <span>Illustrative process Â· Sound off</span>
           <span>
             {process.tab} <ArrowUpRight size={13} />
           </span>
@@ -190,7 +208,7 @@ function ProcessScene({ process }) {
 }
 export default function ProcessStudio({ selected, setSelected }) {
   return (
-    <section id="studio" className="section process-section">
+    <section id="studio" tabIndex={-1} className="section process-section">
       <div className="section-heading reveal">
         <h2>
           Four processes.
@@ -213,6 +231,11 @@ export default function ProcessStudio({ selected, setSelected }) {
             role="tab"
             id={`tab-${p.id}`}
             aria-controls="process-panel"
+            tabIndex={selected === i ? 0 : -1}
+            onKeyDown={(e) => {
+              const next = e.key === "ArrowRight" ? (i + 1) % processes.length : e.key === "ArrowLeft" ? (i + processes.length - 1) % processes.length : e.key === "Home" ? 0 : e.key === "End" ? processes.length - 1 : null;
+              if (next !== null) { e.preventDefault(); setSelected(next); document.getElementById(`tab-${processes[next].id}`)?.focus(); }
+            }}
             aria-selected={selected === i}
             key={p.id}
             onClick={() => setSelected(i)}

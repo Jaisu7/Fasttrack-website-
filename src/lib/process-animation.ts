@@ -7,7 +7,7 @@ import {
   brandSegments,
   nearestBrandPoint,
 } from "./brand-paths";
-import { workpieceCycle } from "./workpiece-cycle.mjs";
+import { workpieceCycle, punchStroke } from "./workpiece-cycle.mjs";
 import { drawWorkpieceBed } from "./workpiece-bed";
 
 export type FabricationProcess = "punching" | "bending" | "welding";
@@ -16,6 +16,7 @@ type Callbacks = {
   mode(manual: boolean): void;
   reduced(value: boolean): void;
   unavailable(): void;
+  cycle?: (phase: string, index: number) => void;
 };
 type Particle = Point & { vx: number; vy: number; life: number; total: number };
 const clamp = (n: number, min = 0, max = 1) => Math.max(min, Math.min(max, n));
@@ -45,6 +46,7 @@ export function createProcessAnimation(
       nudge() {},
       pause() {},
       reset() {},
+      automatic() {},
       destroy() {},
     };
   }
@@ -55,6 +57,11 @@ export function createProcessAnimation(
     tool = new Image();
   const holes: Point[] = [];
   const particles: Particle[] = [];
+  const manualBeads = new Map<number, Point>();
+  let reportedCycle = "";
+  let punchFrom: Point = { ...punchPattern[0] };
+  let punchTo: Point = { ...punchPattern[0] };
+  let punchCycle = -1;
   let alive = true,
     loaded = false,
     visible = false,
@@ -65,7 +72,7 @@ export function createProcessAnimation(
   let viewHeight = 800,
     offset = -150,
     elapsed = 0;
-  const punchInterval = 0.23;
+  const punchInterval = 0.32;
   const duration =
     process === "punching"
       ? punchPattern.length * punchInterval
@@ -81,7 +88,7 @@ export function createProcessAnimation(
     lastPunch = -1,
     emission = 0;
   let target: Point = { x: 0.5, y: 0.5 },
-    position: Point = { ...punchPattern[3] };
+    position: Point = { ...punchPattern[0] };
   let fold = 0,
     tiltX = 0,
     tiltY = 0,
@@ -121,7 +128,7 @@ export function createProcessAnimation(
     }
     const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.04) : 1 / 60;
     lastTime = time;
-    elapsed += dt;
+    if (process !== "welding" || manualUntil <= time || piecePhase !== "working") elapsed += dt;
     draw(time, dt);
     animation = requestAnimationFrame(frame);
   }
@@ -196,31 +203,25 @@ export function createProcessAnimation(
     position.y += (next.y - position.y) * ease;
   }
   function drawPunch(dt: number, manual: boolean) {
-    const cycle = Math.floor(workClock / punchInterval),
-      phase = (workClock % punchInterval) / punchInterval;
-    const index = Math.min(cycle, punchPattern.length - 1);
-    const next =
-      piecePhase === "working"
-        ? manual
-          ? target
-          : punchPattern[index]
-        : { x: 0.87, y: 0.16 };
-    // Travel occurs with the punch lifted; the workpiece is held during impact.
-    if (manual || phase < 0.35 || reduced || piecePhase !== "working")
-      updatePosition(next, dt);
-    if (
-      !reduced &&
-      dt &&
-      piecePhase === "working" &&
-      phase >= 0.56 &&
-      lastPunch !== cycle
-    ) {
+    const stroke = punchStroke(workClock, punchInterval, punchPattern.length);
+    const cycle = Math.floor(workClock / punchInterval);
+    if (piecePhase === "working" && cycle !== punchCycle) {
+      punchCycle = cycle;
+      punchFrom = { ...position };
+      punchTo = { ...(manual ? target : punchPattern[stroke.index]) };
+    }
+    // Lateral positioning ends before the ram descends: each hole and the tool share one contact point.
+    if (!paused) {
+      if (piecePhase === "working") {
+        position = {
+          x: punchFrom.x + (punchTo.x - punchFrom.x) * stroke.travel,
+          y: punchFrom.y + (punchTo.y - punchFrom.y) * stroke.travel,
+        };
+      } else updatePosition({ x: 0.9, y: 0.12 }, dt);
+    }
+    if (!reduced && dt && piecePhase === "working" && stroke.impact && lastPunch !== cycle) {
       lastPunch = cycle;
-      if (
-        !holes.some(
-          (p) => Math.hypot(p.x - position.x, p.y - position.y) < 0.018,
-        )
-      ) {
+      if (!holes.some((p) => Math.hypot(p.x - position.x, p.y - position.y) < 0.018)) {
         holes.push({ ...position });
         if (holes.length > punchPattern.length + 12) holes.shift();
       }
@@ -239,15 +240,21 @@ export function createProcessAnimation(
       ctx.fill();
     }
     const p = projectPlate(position, offset);
-    const down =
-      reduced || piecePhase !== "working"
-        ? 0
-        : phase < 0.5
-          ? smooth((phase - 0.32) / 0.18)
-          : 1 - smooth((phase - 0.6) / 0.2);
-    const lift = 56 * (1 - down);
+    const down = reduced || piecePhase !== "working" ? 0 : stroke.down;
+    const lift = 72 * (1 - down);
+    if (piecePhase === "working") {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.scale(1, 0.46);
+      ctx.strokeStyle = `rgba(231,244,238,${0.18 + down * 0.48})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 23, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
     shadow({ x: p.x - 15, y: p.y + 12 }, 96 + lift * 0.3, 0.42 - lift * 0.003);
-    const h = Math.min(550, Math.max(400, viewHeight - 310)),
+    const h = Math.min(460, Math.max(340, viewHeight - 360)),
       w = (h * tool.width) / tool.height;
     ctx.drawImage(tool, p.x - w * 0.5, p.y - h * 0.98 - lift, w, h);
     if (manual) crosshair(p);
@@ -285,20 +292,21 @@ export function createProcessAnimation(
     const progress = reduced ? 1 : Math.min(1, workClock / duration);
     const nearest = manual ? nearestBrandPoint(target) : null;
     const distance = nearest ? nearest.distance : progress * brandLength;
+    const programmedDistance = progress * brandLength;
     const path = nearest ?? brandPointAt(distance);
     updatePosition(
       piecePhase === "working" ? path.point : { x: 0.87, y: 0.16 },
       dt,
     );
     strokeBrand(brandLength, 1.8, "rgba(19,49,34,.3)");
-    strokeBrand(distance, 18, "rgba(103,74,113,.2)");
-    strokeBrand(distance, 10, "rgba(179,132,75,.32)");
-    strokeBrand(distance, 6, "#738079");
+    strokeBrand(programmedDistance, 18, "rgba(103,74,113,.2)");
+    strokeBrand(programmedDistance, 10, "rgba(179,132,75,.32)");
+    strokeBrand(programmedDistance, 6, "#738079");
     const bead = ctx.createLinearGradient(0, offset + 400, 0, offset + 850);
     bead.addColorStop(0, "#d5d8c9");
     bead.addColorStop(0.5, "#b7beb0");
     bead.addColorStop(1, "#5f7268");
-    for (let d = 0; d < distance; d += 12) {
+    for (let d = 0; d < programmedDistance; d += 12) {
       const point = brandPointAt(d);
       if (!point.cutting) continue;
       const p = projectPlate(point.point, offset + pieceShift);
@@ -309,6 +317,18 @@ export function createProcessAnimation(
       ctx.strokeStyle = "rgba(31,43,38,.4)";
       ctx.lineWidth = 0.65;
       ctx.stroke();
+    }
+    if (manual && dt && path.cutting) {
+      manualBeads.set(Math.round(distance / 9), { ...path.point });
+      if (manualBeads.size > 500) manualBeads.delete(manualBeads.keys().next().value!);
+    }
+    // Manual welds stay on the workpiece even when the torch moves backwards.
+    for (const point of manualBeads.values()) {
+      const q = projectPlate(point, offset + pieceShift);
+      ctx.beginPath();
+      ctx.ellipse(q.x, q.y, 5.2, 3.6, -0.34, 0, Math.PI * 2);
+      ctx.fillStyle = bead;
+      ctx.fill();
     }
     const p = projectPlate(position, offset);
     shadow({ x: p.x + 80, y: p.y + 20 }, 130, 0.27);
@@ -321,7 +341,7 @@ export function createProcessAnimation(
       glow({ x: 0, y: 0 }, 170, "rgba(117,197,255,.4)");
       ctx.restore();
     }
-    const w = 555,
+    const w = 455,
       h = (w * tool.height) / tool.width;
     ctx.drawImage(tool, p.x - w * 0.128, p.y - h * 0.96 - 8, w, h);
     ctx.save();
@@ -422,13 +442,16 @@ export function createProcessAnimation(
     ctx.restore();
   }
   function drawBend(dt: number, manual: boolean) {
-    const automatic = smooth((workClock - 0.7) / 2.2);
+    const automatic = smooth((workClock - 0.85) / 2.6);
     const desired = reduced
-      ? 0.75
+      ? 1
       : manual
         ? clamp((target.y - 0.15) / 0.7)
         : automatic;
-    if (!paused) fold += (desired - fold) * (dt ? 1 - Math.exp(-dt * 7) : 1);
+    if (!paused) {
+      const retained = piecePhase === "working" ? desired : Math.max(fold, desired);
+      fold += (retained - fold) * (dt ? 1 - Math.exp(-dt * 7) : 1);
+    }
     const angle = (fold * Math.PI) / 4,
       depth = fold * 53;
     const a = { x: 175, y: viewHeight * 0.69 },
@@ -533,11 +556,18 @@ export function createProcessAnimation(
       (cycle.phase === "loading" && piecePhase !== "loading")
     ) {
       holes.length = particles.length = 0;
+      manualBeads.clear();
+      punchCycle = -1;
       lastPunch = -1;
       fold = 0;
     }
     pieceIndex = cycle.index;
     piecePhase = reduced ? "complete" : cycle.phase;
+    const report = `${piecePhase}:${cycle.index}`;
+    if (report !== reportedCycle) {
+      reportedCycle = report;
+      callbacks.cycle?.(piecePhase, cycle.index);
+    }
     pieceShift = reduced ? 0 : cycle.shift;
     workClock = reduced ? duration : cycle.workTime;
     const manual = manualUntil > time && !reduced && piecePhase === "working";
@@ -671,11 +701,22 @@ export function createProcessAnimation(
       draw(performance.now(), 0);
       wake();
     },
+    automatic() {
+      manualUntil = 0;
+      targetTiltX = targetTiltY = 0;
+      callbacks.mode(false);
+      wake();
+    },
     reset() {
       elapsed = 0;
+      reportedCycle = "";
+      punchCycle = -1;
+      manualBeads.clear();
       lastPunch = -1;
       manualUntil = emission = 0;
       holes.length = particles.length = 0;
+      manualBeads.clear();
+      punchCycle = -1;
       pieceIndex = pieceShift = workClock = 0;
       piecePhase = "working";
       position =

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { prepareEnquiry } from "../lib/enquiry.mjs";
 import Brand from "./Brand";
+import { products } from "../lib/fasttrack-data";
 export default function Enquiry({ requirement, setRequirement }) {
   const [draft, setDraft] = useState(null),
     [status, setStatus] = useState("");
@@ -122,12 +123,7 @@ export default function Enquiry({ requirement, setRequirement }) {
               >
                 <option value="">Select a requirement</option>
                 {[
-                  "Worktables & preparation",
-                  "Refrigerated displays",
-                  "Sinks & wash stations",
-                  "Storage & shelving",
-                  "Cabinets & counters",
-                  "Custom retail fabrication",
+                  ...products.map((product) => product.name),
                   "Laser / punching / bending / welding",
                   "Other project",
                 ].map((p) => (
