@@ -1980,3 +1980,20 @@ html[data-theme="light"] .product-view-tools button[aria-pressed="true"] { color
 .door-opening-control input { width: 100%; accent-color: var(--accent); margin: 16px 0 10px; }
 .door-opening-control p { font-size: 11px; }
 @media(max-width:720px) { .product-view-tools { gap: 8px; } .product-view-tools button { min-width: 35px; padding: 8px 10px; } }
+.product-configurator { border: 1px solid var(--rule); padding: 24px; margin-top: 28px; background: color-mix(in srgb, var(--accent) 4%, transparent); }
+.config-heading { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 14px; align-items: center; }
+.config-heading h4 { margin: 0; font-size: 19px; font-weight: 600; }
+.config-heading span { color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.config-dimensions { display: grid; gap: 18px; margin: 24px 0; }
+.config-dimensions label { display: grid; grid-template-columns: 1fr auto; font-size: 12px; gap: 12px; }
+.config-dimensions output { color: var(--accent); font-variant-numeric: tabular-nums; }
+.config-dimensions input { grid-column: 1/-1; width: 100%; margin: 0; accent-color: var(--accent); }
+.config-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.config-options label { font-size: 11px; color: var(--muted); }
+.config-options select, .config-options input { display: block; margin-top: 9px; padding: 12px 8px; width: 100%; border: 1px solid var(--rule); color: var(--text); background: var(--bg); font-size: 12px; }
+.configuration-summary { margin: 24px 0; border-block: 1px solid var(--rule); padding: 16px 0; font-size: 12px; }
+.configuration-summary summary { cursor: pointer; }
+.configuration-summary pre { white-space: pre-wrap; font: 11px/1.8 Manrope, sans-serif; color: var(--muted); margin-top: 15px; }
+.product-configurator > .button { width: 100%; font-size: 12px; white-space: normal; }
+.product-configurator > p:last-child { font-size: 10px; margin-top: 15px; }
+@media(max-width:720px) { .product-configurator { padding: 18px; } .config-options { grid-template-columns: 1fr 1fr; } .config-heading h4 { font-size: 17px; } }

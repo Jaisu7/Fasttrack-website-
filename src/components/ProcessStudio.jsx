@@ -112,17 +112,17 @@ function ProcessScene({ process }) {
               </li>
             ))}
           </ol>
-          <p className="quiet cycle-count">Cycle {cycle.index + 1} Â· One piece at a time</p>
+          <p className="quiet cycle-count">Cycle {cycle.index + 1} · One piece at a time</p>
           <p className="quiet process-status" aria-live="polite">
             {failed
               ? "Still preview"
               : !ready
                 ? "Loading process..."
                 : reduced
-                  ? "Reduced motion Â· Finished workpiece"
+                  ? "Reduced motion · Finished workpiece"
                   : manual
                       ? "Manual tool guidance"
-                      : "Finish â†’ release â†’ fresh blank"}
+                      : "Finish → release → fresh blank"}
           </p>
         </div>
       </div>
@@ -157,7 +157,7 @@ function ProcessScene({ process }) {
           />
         </div>
         <div className="media-caption">
-          <span>Illustrative process Â· Sound off</span>
+          <span>Illustrative process · Sound off</span>
           <span>
             {process.tab} <ArrowUpRight size={13} />
           </span>

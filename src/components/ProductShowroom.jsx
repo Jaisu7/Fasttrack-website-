@@ -10,8 +10,10 @@ import {
   Lightbulb,
   Droplets,
 } from "lucide-react";
+import ProductConfigurator from "./ProductConfigurator";
+import { normalizeConfiguration, supportsConfiguration } from "../lib/product-configuration.mjs";
 import { products, categories } from "../lib/fasttrack-data";
-function ProductViewer({ product }) {
+function ProductViewer({ product, configuration, onFinish }) {
   const canvas = useRef(null),
     root = useRef(null),
     engine = useRef(null),
@@ -41,7 +43,7 @@ function ProductViewer({ product }) {
             unavailable: () => alive && setFailed(true),
             rotation: (v) => alive && setRotation(v),
             operation: (amount) => { if (alive) { setOperation(amount > 0); setOpening(Math.round(amount * 100)); } },
-          });
+          }, configuration);
         } catch {
           if (alive) setFailed(true);
         }
@@ -60,6 +62,12 @@ function ProductViewer({ product }) {
       engine.current = null;
     };
   }, [product.id]);
+  useEffect(() => {
+    if (ready && configuration) engine.current?.configure(configuration);
+  }, [ready, configuration?.width, configuration?.depth, configuration?.height]);
+  useEffect(() => {
+    if (ready && configuration) { engine.current?.setFinish(configuration.finish); setFinish(configuration.finish); }
+  }, [ready, configuration?.finish]);
   function reset() {
     engine.current?.reset();
     setRotation(false);
@@ -69,6 +77,7 @@ function ProductViewer({ product }) {
     setOpening(0);
     setView("perspective");
     setFinish(0);
+    onFinish?.(0);
   }
   const action =
     product.operation === "doors"
@@ -195,6 +204,7 @@ function ProductViewer({ product }) {
                 const f = Number(e.target.value);
                 setFinish(f);
                 engine.current?.setFinish(f);
+                onFinish?.(f);
               }}
             >
               <option value="0">Brushed steel</option>
@@ -214,6 +224,7 @@ function ProductViewer({ product }) {
 export default function ProductShowroom({ onEnquire }) {
   const [category, setCategory] = useState("All products"),
     [query, setQuery] = useState(""),
+    [configurations, setConfigurations] = useState({}),
     [selected, setSelected] = useState(products[0].id);
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matches = products.filter((p) => words.every((word) =>
@@ -223,6 +234,8 @@ export default function ProductShowroom({ onEnquire }) {
     (p) => category === "All products" || p.category === category,
   );
   const product = visible.find((p) => p.id === selected) || visible[0];
+  const configuration = product && supportsConfiguration(product.id) ? configurations[product.id] || normalizeConfiguration(product.id) : null;
+  const changeConfiguration = (next) => setConfigurations((current) => ({ ...current, [product.id]: next }));
   return (
     <section id="products" className="section products-section">
       <div className="section-heading reveal">
@@ -264,7 +277,8 @@ export default function ProductShowroom({ onEnquire }) {
             </button>
           ))}
         </div>
-        <ProductViewer key={product.id} product={product} />
+        <div><ProductViewer key={`${product.id}:${configuration?.shelves ?? "default"}`} product={product} configuration={configuration} onFinish={configuration ? (finish) => changeConfiguration({ ...configuration, finish }) : undefined} />
+        {configuration && <ProductConfigurator product={product} config={configuration} onChange={changeConfiguration} onEnquire={onEnquire} />}</div>
         <div className="product-description">
           <p className="product-category-label">{product.category}</p>
           <h3>{product.name}</h3>

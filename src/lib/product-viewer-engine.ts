@@ -4,6 +4,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createProductModel } from "./product-models";
 
 export interface ProductViewerEngine {
+  configure(config: { width: number; depth: number; height: number }): void;
   setRotation(value: boolean): void;
   setLighting(mode: 0 | 1 | 2): void;
   setAssembly(value: boolean): void;
@@ -27,8 +28,10 @@ export function createProductViewer(
   canvas: HTMLCanvasElement,
   productId: string,
   callbacks: Callbacks,
+  configuration?: { shelves: number },
 ): ProductViewerEngine {
   const noEngine: ProductViewerEngine = {
+    configure() {},
     setRotation() {},
     setLighting() {},
     setAssembly() {},
@@ -105,7 +108,7 @@ export function createProductViewer(
     scene.environmentIntensity = 0.8;
     generator.dispose();
     environment.dispose();
-    model = createProductModel(productId);
+    model = createProductModel(productId, configuration);
     scene.add(model.group);
   } catch {
     controls.dispose();
@@ -130,6 +133,7 @@ export function createProductViewer(
   const bounds = new THREE.Box3().setFromObject(model.group);
   const size = bounds.getSize(new THREE.Vector3());
   const center = bounds.getCenter(new THREE.Vector3());
+  const nativeSize = size.clone();
   model.animate(1, 0, 0, false);
   const expandedSphere = new THREE.Box3()
     .setFromObject(model.group)
@@ -443,6 +447,16 @@ export function createProductViewer(
   resize();
 
   return {
+    configure(config) {
+      model.group.scale.set(config.width / 1000 / nativeSize.x, config.height / 1000 / nativeSize.y, config.depth / 1000 / nativeSize.z);
+      model.animate(0, 0, 0, true);
+      bounds.setFromObject(model.group); bounds.getSize(size); bounds.getCenter(center);
+      contact.scale.set(size.x / nativeSize.x, size.z / nativeSize.z, 1);
+      contact.position.set(center.x, floorY + 0.002, center.z);
+      home(); dirtyFrames = 2; wake();
+      canvas.dataset.dimensions = `${config.width}x${config.depth}x${config.height}`;
+      canvas.dataset.shelves = String(configuration?.shelves ?? "default");
+    },
     setRotation(value) {
       controls.autoRotate = value && !reduced;
       callbacks.rotation?.(controls.autoRotate);

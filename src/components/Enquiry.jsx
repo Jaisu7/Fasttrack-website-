@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Mail,
@@ -10,9 +10,11 @@ import {
 import { prepareEnquiry } from "../lib/enquiry.mjs";
 import Brand from "./Brand";
 import { products } from "../lib/fasttrack-data";
-export default function Enquiry({ requirement, setRequirement }) {
+export default function Enquiry({ requirement, setRequirement, configurationDetails = "" }) {
   const [draft, setDraft] = useState(null),
-    [status, setStatus] = useState("");
+    [status, setStatus] = useState(""),
+    [details, setDetails] = useState(configurationDetails);
+  useEffect(() => { setDetails(configurationDetails); setDraft(null); setStatus(""); }, [configurationDetails, requirement]);
   function submit(e) {
     e.preventDefault();
     const fields = Object.fromEntries(new FormData(e.currentTarget));
@@ -136,6 +138,8 @@ export default function Enquiry({ requirement, setRequirement }) {
             Project details
             <textarea
               name="details"
+              value={details}
+              onChange={(event) => setDetails(event.target.value)}
               placeholder="Tell us about your project, scope and any key requirements."
               required
               minLength="15"
@@ -199,7 +203,7 @@ export default function Enquiry({ requirement, setRequirement }) {
           <a href="#enquiry">Contact</a>
         </nav>
         <small>
-          © {new Date().getFullYear()} Fastrack Metallic. All rights reserved.
+          Â© {new Date().getFullYear()} Fastrack Metallic. All rights reserved.
         </small>
       </footer>
     </>

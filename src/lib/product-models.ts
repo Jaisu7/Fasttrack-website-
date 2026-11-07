@@ -20,7 +20,7 @@ type Part = {
 };
 
 /** Native, representative product geometry; these are not production CAD files. */
-export function createProductModel(id: string): ProductModel {
+export function createProductModel(id: string, configuration?: { shelves: number }): ProductModel {
   const group = new THREE.Group();
   const parts: Part[] = [];
   const actions: ((value: number, time: number, reduced: boolean) => void)[] =
@@ -217,8 +217,10 @@ export function createProductModel(id: string): ProductModel {
     // Folded worktop hems and underside reinforcement channels.
     for (const z of [-0.482, 0.482]) box([2.34, 0.055, 0.022], [0, 1.365, z]);
     for (const x of [-0.75, 0.75]) box([0.06, 0.06, 0.88], [x, 1.33, 0]);
-    const shelf = tray(2.17, 0.79, 0.35);
-    explode(shelf, [0, 0.16, 0.4]);
+    for (let i = 0; i < (configuration?.shelves ?? 1); i++) {
+      const shelf = tray(2.17, 0.79, 0.3 + i * 0.45);
+      explode(shelf, [0, 0.16, 0.4]);
+    }
     for (const x of [-1.08, 1.08])
       for (const z of [-0.39, 0.39]) bolt([x, 0.3, z + 0.03]);
     box([2.2, 0.045, 0.035], [0, 1.33, -0.37]);
@@ -228,7 +230,7 @@ export function createProductModel(id: string): ProductModel {
       rod([-1.08, 0.28, z], [1.08, 0.28, z], 0.022);
     for (const x of [-1.08, 1.08])
       rod([x, 0.28, -0.39], [x, 0.28, 0.39], 0.022);
-    if (id === "sink-shelf") {
+    if ((configuration?.shelves ?? (id === "sink-shelf" ? 1 : 0)) > 0) {
       const lowerShelf = tray(2.08, 0.73, 0.25);
       lowerShelf.name = "sink-lower-shelf";
       explode(lowerShelf, [0, 0.12, 0.38]);
@@ -402,8 +404,9 @@ export function createProductModel(id: string): ProductModel {
     operationContinuous = true;
   } else if (id === "rack") {
     legs(1.96, 0.7, 2.43);
-    for (let i = 0; i < 4; i++) {
-      const y = 0.25 + i * 0.69;
+    const levels = configuration?.shelves ?? 4;
+    for (let i = 0; i < levels; i++) {
+      const y = 0.25 + i * (2.07 / (levels - 1));
       const shelf = tray(2.06, 0.79, y);
       explode(shelf, [0, 0.15 + i * 0.13, 0.23 + i * 0.025]);
       for (const x of [-0.98, 0.98])

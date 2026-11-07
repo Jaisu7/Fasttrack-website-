@@ -8,7 +8,8 @@ import Enquiry from "./components/Enquiry";
 import WorkshopWidget from "./components/WorkshopWidget";
 export default function App() {
   const [process, setProcess] = useState(0),
-    [requirement, setRequirement] = useState("");
+    [requirement, setRequirement] = useState(""),
+    [configurationDetails, setConfigurationDetails] = useState("");
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (preference.matches) return;
@@ -29,7 +30,8 @@ export default function App() {
     });
     return () => observer.disconnect();
   }, []);
-  function enquire(name) {
+  function enquire(name, summary = "") {
+    setConfigurationDetails(summary);
     setRequirement(name);
     document
       .getElementById("enquiry")
@@ -56,7 +58,7 @@ export default function App() {
           </a>
         </div>
         <ProductShowroom onEnquire={enquire} />
-        <Enquiry requirement={requirement} setRequirement={setRequirement} />
+        <Enquiry requirement={requirement} setRequirement={setRequirement} configurationDetails={configurationDetails} />
       </main>
       <WorkshopWidget
         onSelect={(i) => {
