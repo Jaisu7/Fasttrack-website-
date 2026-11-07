@@ -16,8 +16,19 @@ export type Product = {
   options: string[];
   illustrative?: boolean;
   operation?: "doors" | "lights" | "water";
+  video?: string;
 };
 export const products: Product[] = [
+  {
+    id: "wine-chiller",
+    name: "Wine Chiller",
+    category: "Display & refrigeration",
+    image: "/images/wine-chiller.jpg",
+    video: "/videos/wine-chiller.mp4",
+    description: "A collection, beautifully presented.",
+    detail: "See an illuminated wine chiller installation in motion. Glass-fronted presentation and organised bottle storage create a focal point for hospitality interiors. Share your layout and storage requirements to discuss a project-specific solution.",
+    options: ["Wine display layouts", "Bottle storage arrangement", "Cooling requirements reviewed per project"],
+  },
   {
     id: "worktable",
     name: "SS preparation tables",

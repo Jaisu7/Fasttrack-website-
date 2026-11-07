@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import Brand from "./Brand";
+import ThemeToggle from "./ThemeToggle";
 export default function Header() {
   const [open, setOpen] = useState(false);
   return (
@@ -21,6 +22,7 @@ export default function Header() {
             About
           </a>
         </nav>
+        <ThemeToggle />
         <a className="button button-green header-quote" href="#enquiry">
           Request a quote <ArrowUpRight size={20} />
         </a>

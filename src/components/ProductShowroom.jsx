@@ -11,6 +11,7 @@ import {
   Droplets,
 } from "lucide-react";
 import { products, categories } from "../lib/fasttrack-data";
+import WineChillerFilm from "./WineChillerFilm";
 function ProductViewer({ product }) {
   const canvas = useRef(null),
     root = useRef(null),
@@ -210,7 +211,7 @@ export default function ProductShowroom({ onEnquire }) {
           <br />
           you work.
         </h2>
-        <p>Explore {products.length} equipment concepts in 360°.</p>
+        <p>Explore equipment in 360°.<br />See the Wine Chiller in motion.</p>
       </div>
       <div className="tab-rail category-rail" aria-label="Product categories">
         {categories.map((c) => (
@@ -236,20 +237,20 @@ export default function ProductShowroom({ onEnquire }) {
             </button>
           ))}
         </div>
-        <ProductViewer key={product.id} product={product} />
+        {product.video ? <WineChillerFilm key={product.id} /> : <ProductViewer key={product.id} product={product} />}
         <div className="product-description">
           <h3>{product.name}</h3>
           <p>{product.detail}</p>
           <button className="text-link" onClick={() => onEnquire(product.name)}>
             Discuss this product <ArrowUpRight size={20} />
           </button>
-          <p className="quiet concept-note">
+          {!product.video && <p className="quiet concept-note">
             Representative 3D concepts. Final design, dimensions and equipment
             specifications are reviewed for your project.
             {!["worktable", "sink", "display", "cabinets", "custom"].includes(product.id)
               ? " Image fallback represents the product family rather than this exact model."
               : ""}
-          </p>
+          </p>}
         </div>
       </div>
     </section>
