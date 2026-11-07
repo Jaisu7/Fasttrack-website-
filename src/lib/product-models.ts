@@ -28,9 +28,10 @@ export function createProductModel(id: string, configuration?: { shelves: number
   let operationContinuous = false;
   const grain = brushedTexture();
   const steel = new THREE.MeshPhysicalMaterial({
-    color: 0xc2c8cc,
+    color: 0xa5aeb3,
+    map: grain,
     metalness: 0.96,
-    roughness: 0.24,
+    roughness: 0.3,
     roughnessMap: grain,
     bumpMap: grain,
     bumpScale: 0.00025,

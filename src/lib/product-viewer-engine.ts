@@ -79,14 +79,14 @@ export function createProductViewer(
   }
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xc5c9cb);
+  scene.background = new THREE.Color(0xe1e2df);
   const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 60);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.92;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.09;
@@ -172,7 +172,7 @@ export function createProductViewer(
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(200, 200),
     new THREE.MeshStandardMaterial({
-      color: 0x858b90,
+      color: 0x979e99,
       envMapIntensity: 0.15,
       roughness: 0.95,
       metalness: 0,
@@ -203,6 +203,8 @@ export function createProductViewer(
   key.shadow.camera.right = 4;
   key.shadow.camera.top = 5;
   key.shadow.camera.bottom = -4;
+  key.shadow.intensity = 0.32;
+  key.shadow.radius = 4;
   key.shadow.normalBias = 0.012;
   key.shadow.bias = -0.00015;
   key.shadow.camera.near = 0.1;
@@ -242,13 +244,14 @@ export function createProductViewer(
     return (
       (vertical / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) +
         size.z * 0.42) *
-      1.2
+      (aspect < 1.25 ? 1.08 : 1.27)
     );
   }
   function home() {
+    canvas.dataset.view = "perspective";
     assemblyCameraScale = 1;
     distance = framingDistance();
-    controls.target.copy(center).add(new THREE.Vector3(0, size.y * 0.025, 0));
+    controls.target.copy(center).add(new THREE.Vector3(0, -size.y * 0.06, 0));
     camera.position
       .copy(controls.target)
       .addScaledVector(homeDirection, distance);

@@ -1,3 +1,4 @@
+import "../styles/product-showroom.css";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
@@ -9,13 +10,17 @@ import {
   DoorOpen,
   Lightbulb,
   Droplets,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  FolderOpen,
 } from "lucide-react";
 import ProjectList from "./ProjectList";
 import { PROJECT_STORAGE_KEY, addProjectItem, readProject } from "../lib/project-list.mjs";
 import ProductConfigurator from "./ProductConfigurator";
-import { normalizeConfiguration, supportsConfiguration } from "../lib/product-configuration.mjs";
+import { normalizeConfiguration, supportsConfiguration, configurationSummary } from "../lib/product-configuration.mjs";
 import { products, categories } from "../lib/fasttrack-data";
-function ProductViewer({ product, configuration, onFinish }) {
+function ProductViewer({ product, configuration, onFinish, onAdd, onEnquire, children }) {
   const canvas = useRef(null),
     root = useRef(null),
     engine = useRef(null),
@@ -65,7 +70,7 @@ function ProductViewer({ product, configuration, onFinish }) {
     };
   }, [product.id]);
   useEffect(() => {
-    if (ready && configuration) engine.current?.configure(configuration);
+    if (ready && configuration) { engine.current?.configure(configuration); setView("perspective"); }
   }, [ready, configuration?.width, configuration?.depth, configuration?.height]);
   useEffect(() => {
     if (ready && configuration) { engine.current?.setFinish(configuration.finish); setFinish(configuration.finish); }
@@ -89,140 +94,39 @@ function ProductViewer({ product, configuration, onFinish }) {
         : product.operation === "water"
           ? { label: "Water flow", Icon: Droplets }
           : null;
+  const chooseFinish = (value) => { setFinish(value); engine.current?.setFinish(value); onFinish?.(value); };
   return (
-    <div ref={root} className="viewer-column">
+    <div ref={root} className="product-experience">
       <div className="product-stage">
-        <img
-          src={product.image}
-          alt={`Illustrative ${product.name.toLowerCase()}`}
-          loading="lazy"
-          className={ready && !failed ? "hidden" : ""}
-        />
-        <canvas
-          ref={canvas}
-          tabIndex={failed ? -1 : 0}
-          className={failed ? "unavailable" : ""}
-          aria-label={`360 degree ${product.name} concept. Drag or use arrow keys to rotate.`}
-          onKeyDown={(e) => {
-            const v = {
-              ArrowLeft: [-0.12, 0],
-              ArrowRight: [0.12, 0],
-              ArrowUp: [0, -0.08],
-              ArrowDown: [0, 0.08],
-            }[e.key];
-            if (v) {
-              e.preventDefault();
-              engine.current?.rotate(...v);
-            }
-          }}
-        />
-        {!ready && (
-          <span className="viewer-message">
-            {failed
-              ? "Image preview · 3D requires WebGL"
-              : "Preparing the 3D model…"}
-          </span>
-        )}
+        <img src={product.image} alt={`Illustrative ${product.name.toLowerCase()}`} loading="lazy" className={ready && !failed ? "hidden" : ""} />
+        <canvas ref={canvas} tabIndex={failed ? -1 : 0} className={failed ? "unavailable" : ""} aria-label={`360 degree ${product.name} concept. Drag or use arrow keys to rotate.`} onKeyDown={(event) => {
+          const direction = { ArrowLeft: [-0.12, 0], ArrowRight: [0.12, 0], ArrowUp: [0, -0.08], ArrowDown: [0, 0.08] }[event.key];
+          if (direction) { event.preventDefault(); engine.current?.rotate(...direction); }
+        }} />
+        {!ready && <span className="viewer-message">{failed ? "Image preview · 3D requires WebGL" : "Preparing your product…"}</span>}
+        <div className="stage-footer"><span><Move size={15} /> Drag to explore <i>· Scroll to zoom</i></span><div className="product-zoom-controls"><button disabled={!ready} aria-label="Zoom out product" onClick={() => engine.current?.zoom(1.18)}>−</button><button disabled={!ready} aria-label="Zoom in product" onClick={() => engine.current?.zoom(0.85)}>+</button></div></div>
       </div>
-      <div className="media-caption">
-        <span>
-          <Move size={14} /> Interactive concept · Drag to rotate
-        </span>
-        <span>
-          {lighting === 0 ? "Studio" : lighting === 1 ? "Warm" : "Cool"}{" "}
-          lighting
-        </span>
-      </div>
-      <div className="product-view-tools" aria-label="Product camera controls">
-        <div className="product-view-presets" aria-label="View angle">
-          {[["perspective", "Studio"], ["front", "Front"], ["side", "Side"], ["top", "Top"]].map(([id, label]) => <button key={id} disabled={!ready} aria-pressed={view === id} onClick={() => { setView(id); engine.current?.setView(id); }}>{label}</button>)}
+      <aside className="product-inspector" key={product.id} aria-label="Product details and configuration">
+        <h3>{product.name}</h3><p className="product-inspector-lead">{product.description}</p>
+        <div className="product-view-presets" aria-label="View angle">{[["perspective", "Studio"], ["front", "Front"], ["side", "Side"], ["top", "Top"]].map(([id, label]) => <button key={id} disabled={!ready} aria-pressed={view === id} onClick={() => { setView(id); engine.current?.setView(id); }}>{label}</button>)}</div>
+        <div className="finish-row"><span>Finish</span><fieldset aria-label="Product steel finish"><legend className="sr-only">Product steel finish</legend>{[[0, "Brushed"], [1, "Satin"]].map(([id, label]) => <label key={id} className={finish === id ? "chosen" : ""}><input type="radio" name={`finish-${product.id}`} value={id} checked={finish === id} disabled={!ready} onChange={() => chooseFinish(id)} /><i className={`steel-swatch swatch-${id}`} />{label}</label>)}</fieldset></div>
+        {action && <div className="product-operation"><button className="text-control" disabled={!ready} aria-pressed={operation} onClick={() => engine.current?.setOperation(!operation)}><action.Icon size={16} />{product.operation === "doors" ? operation ? "Close doors" : "Open doors" : `${action.label}: ${operation ? "On" : "Off"}`}</button>
+        {product.operation === "doors" && <div className="door-opening-control"><label htmlFor={`door-${product.id}`}>Door opening <span>{Math.round(opening * 86 / 100)}°</span></label><input id={`door-${product.id}`} aria-label="Door opening" type="range" min="0" max="100" disabled={!ready} value={opening} onChange={(e) => engine.current?.setOperation(Number(e.target.value) / 100)} /><p className="quiet">Adjust the opening, or tap a door on the model.</p></div>}</div>}
+        {children}
+        {!configuration && <><button className="button button-green inspector-add" onClick={() => onAdd(product.id, null)}>Add to project list <ArrowUpRight size={16} /></button><button className="inspector-enquire" onClick={() => onEnquire(product.name)}>Enquire about this product <ArrowUpRight size={15} /></button></>}
+        <details className="inspector-details viewer-advanced"><summary>Details &amp; viewer tools</summary><div className="viewer-controls">
+          <button className="button button-outline" disabled={!ready || reduced} aria-pressed={rotation} onClick={() => engine.current?.setRotation(!rotation)}><RotateCw size={16} />{rotation ? "Stop rotation" : "Rotate 360°"}</button>
+          <button className="button button-outline" disabled={!ready} onClick={() => { const mode = (lighting + 1) % 3; setLighting(mode); engine.current?.setLighting(mode); }}><Sun size={16} />{["Studio", "Warm", "Cool"][lighting]} lighting</button>
+          <button className="button button-outline" disabled={!ready} aria-pressed={exploded} onClick={() => { setExploded(!exploded); engine.current?.setAssembly(!exploded); }}><Layers size={16} />Exploded view</button>
+          <button className="button button-outline" disabled={!ready} onClick={reset}><RotateCcw size={16} />Reset view</button>
         </div>
-        <div className="product-zoom-controls"><button disabled={!ready} aria-label="Zoom out product" onClick={() => engine.current?.zoom(1.18)}>−</button><button disabled={!ready} aria-label="Zoom in product" onClick={() => engine.current?.zoom(0.85)}>+</button></div>
-      </div>
-      <div className="viewer-controls">
-        <button
-          className="button button-outline"
-          disabled={!ready || reduced}
-          aria-pressed={rotation}
-          onClick={() => engine.current?.setRotation(!rotation)}
-        >
-          <RotateCw size={17} />
-          {rotation ? "Stop rotation" : "Rotate 360°"}
-        </button>
-        <button
-          className="button button-outline"
-          disabled={!ready}
-          onClick={() => {
-            const m = (lighting + 1) % 3;
-            setLighting(m);
-            engine.current?.setLighting(m);
-          }}
-        >
-          <Sun size={17} />
-          Lighting
-        </button>
-        <button
-          className="button button-outline"
-          disabled={!ready}
-          aria-pressed={exploded}
-          onClick={() => {
-            setExploded(!exploded);
-            engine.current?.setAssembly(!exploded);
-          }}
-        >
-          <Layers size={17} />
-          Exploded view
-        </button>
-        <button
-          className="button button-outline"
-          disabled={!ready}
-          onClick={reset}
-        >
-          <RotateCcw size={17} />
-          Reset
-        </button>
-      </div>
-      {ready && (
-        <div className="viewer-options">
-          {action && (
-            <button
-              className="text-control"
-              aria-pressed={operation}
-              onClick={() => {
-                setOperation(!operation);
-                engine.current?.setOperation(!operation);
-              }}
-            >
-              <action.Icon size={16} />
-              {action.label}: {operation ? "On" : "Off"}
-            </button>
-          )}
-          <label>
-            Finish{" "}
-            <select
-              aria-label="Product steel finish"
-              value={finish}
-              onChange={(e) => {
-                const f = Number(e.target.value);
-                setFinish(f);
-                engine.current?.setFinish(f);
-                onFinish?.(f);
-              }}
-            >
-              <option value="0">Brushed steel</option>
-              <option value="1">Satin steel</option>
-            </select>
-          </label>
-        </div>
-      )}
-      {ready && product.operation === "doors" && <div className="door-opening-control">
-        <label htmlFor={`door-${product.id}`}>Door opening <span>{Math.round(opening * 86 / 100)}°</span></label>
-        <input id={`door-${product.id}`} aria-label="Door opening" type="range" min="0" max="100" value={opening} onChange={(e) => engine.current?.setOperation(Number(e.target.value) / 100)} />
-        <p className="quiet">Drag to inspect the interior, or tap a door on the model. Arrow keys rotate the view.</p>
-      </div>}
+        {configuration && <details className="configuration-summary"><summary>Configuration summary</summary><pre>{configurationSummary(product.name, configuration)}</pre></details>}
+        <p>{product.detail}</p><ul className="product-features">{product.options.map((option) => <li key={option}>{option}</li>)}</ul><p className="quiet">Illustrative 3D concept. Final dimensions, construction and specifications are reviewed for your project.</p></details>
+      </aside>
     </div>
   );
 }
+
 export default function ProductShowroom({ onEnquire }) {
   const [category, setCategory] = useState("All products"),
     [query, setQuery] = useState(""),
@@ -230,6 +134,7 @@ export default function ProductShowroom({ onEnquire }) {
     [projectItems, setProjectItems] = useState(() => { try { return readProject(localStorage.getItem(PROJECT_STORAGE_KEY), products); } catch { return []; } }),
     [storageAvailable, setStorageAvailable] = useState(true),
     [projectStatus, setProjectStatus] = useState(""),
+    [projectOpen, setProjectOpen] = useState(false),
     [selected, setSelected] = useState(products[0].id);
   useEffect(() => { try { localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify({ version: 1, items: projectItems })); } catch { setStorageAvailable(false); } }, [projectItems]);
   useEffect(() => {
@@ -237,10 +142,16 @@ export default function ProductShowroom({ onEnquire }) {
     window.addEventListener("storage", sync);
     return () => window.removeEventListener("storage", sync);
   }, []);
+  useEffect(() => {
+    const section = document.getElementById("products");
+    const observer = new IntersectionObserver(([entry]) => document.body.classList.toggle("in-product-showroom", entry.isIntersecting));
+    observer.observe(section);
+    return () => { observer.disconnect(); document.body.classList.remove("in-product-showroom"); };
+  }, []);
   function addToProject(productId, config) {
     const next = addProjectItem(projectItems, productId, config, crypto.randomUUID());
     if (next === projectItems) { setProjectStatus("Your list has 30 configurations. Remove an item before adding another."); return; }
-    setProjectItems(next); setProjectStatus("Added to your project list below. Matching configurations are combined.");
+    setProjectItems(next); setProjectOpen(true); setProjectStatus("Added to your project list below. Matching configurations are combined.");
   }
   function editProject(item) {
     setCategory("All products"); setQuery(""); setSelected(item.productId);
@@ -250,7 +161,7 @@ export default function ProductShowroom({ onEnquire }) {
   }
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matches = products.filter((p) => words.every((word) =>
-    [p.name, p.category, p.description, ...p.options].join(" ").toLowerCase().includes(word),
+    [p.name, p.description, p.detail, ...p.options].join(" ").toLowerCase().includes(word),
   ));
   const visible = matches.filter(
     (p) => category === "All products" || p.category === category,
@@ -258,70 +169,30 @@ export default function ProductShowroom({ onEnquire }) {
   const product = visible.find((p) => p.id === selected) || visible[0];
   const configuration = product && supportsConfiguration(product.id) ? configurations[product.id] || normalizeConfiguration(product.id) : null;
   const changeConfiguration = (next) => setConfigurations((current) => ({ ...current, [product.id]: next }));
+  const gallery = useRef(null);
+  const labels = { worktable: "SS tables", refrigerator: "Refrigerators", "hot-cabinet": "Hot cabinets", display: "Displays", sink: "Sinks", "sink-shelf": "Sinks + shelves", rack: "Racks", shelves: "Wall shelves", "produce-shelf": "Fruit & vegetable", cabinets: "Cabinets", custom: "Custom fabrication" };
+  const categoryLabels = { "All products": "All equipment", "Kitchen equipment": "Kitchen", "Display & refrigeration": "Refrigeration", Storage: "Storage", "Custom fabrication": "Custom" };
+  const galleryOrder = ["worktable", "refrigerator", "hot-cabinet", "display", "sink", "rack", "sink-shelf", "shelves", "produce-shelf", "cabinets", "custom"];
+  const galleryProducts = [...visible].sort((a, b) => galleryOrder.indexOf(a.id) - galleryOrder.indexOf(b.id));
   return (
     <section id="products" className="section products-section">
-      <div className="section-heading reveal">
-        <h2>
-          Made for the way
-          <br />
-          you work.
-        </h2>
-        <p>Explore equipment in 360°. Find the right starting point for your project.</p>
+      <div className="product-section-heading"><h2>Precision, on display.</h2><p>Explore. Refine. Make it yours.</p></div>
+      <div className="product-browse-bar">
+        <div className="tab-rail category-rail" aria-label="Product categories">{categories.map((c) => <button key={c} aria-pressed={category === c} onClick={() => { setCategory(c); setProjectStatus(""); }}>{categoryLabels[c]}</button>)}</div>
+        <label className="product-search"><Search size={18} /><span className="sr-only">Find your equipment</span><input aria-label="Find your equipment" type="search" placeholder="Search equipment, e.g. table, sink…" value={query} onChange={(e) => { setQuery(e.target.value); setProjectStatus(""); }} /></label>
       </div>
-      <div className="product-search-bar">
-        <label htmlFor="product-search">Find your equipment
-          <input id="product-search" type="search" placeholder="Search sinks, racks, refrigerators…" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </label>
-        <span className="quiet" role="status">{visible.length} of {products.length} product families</span>
-        <a className="text-control project-list-shortcut" href="#project-list">Project list ({projectItems.length})</a>
-        {(query || category !== "All products") && <button className="text-control" onClick={() => { setQuery(""); setCategory("All products"); }}>Clear filters</button>}
-      </div>
-      <div className="tab-rail category-rail" aria-label="Product categories">
-        {categories.map((c) => (
-          <button
-            key={c}
-            aria-pressed={category === c}
-            onClick={() => setCategory(c)}
-          >
-            {c}<span className="category-count">{matches.filter((p) => c === "All products" || p.category === c).length}</span>
-          </button>
-        ))}
-      </div>
-      {product ? <div className="showroom-layout">
-        <div className="product-list" aria-label="Product families">
-          {visible.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setSelected(p.id)}
-              aria-pressed={product.id === p.id}
-            >
-              <span className="product-list-copy"><strong>{p.name}</strong><small>{p.description}</small></span>
-              <ArrowUpRight size={17} />
-            </button>
-          ))}
+      {(query || category !== "All products") && <div className="product-filter-status"><span role="status">{visible.length} equipment {visible.length === 1 ? "family" : "families"}</span><button className="text-control" onClick={() => { setQuery(""); setCategory("All products"); }}>Clear filters</button></div>}
+      {product ? <>
+        <ProductViewer key={`${product.id}:${configuration?.shelves ?? "default"}`} product={product} configuration={configuration} onFinish={configuration ? (finish) => changeConfiguration({ ...configuration, finish }) : undefined} onAdd={addToProject} onEnquire={onEnquire}>
+          {configuration && <ProductConfigurator product={product} config={configuration} onChange={changeConfiguration} onEnquire={onEnquire} onAdd={addToProject} />}
+          {projectStatus && <p className="product-save-status" role="status">{projectStatus} <a href="#project-list" onClick={() => setProjectOpen(true)}>View list ↗</a></p>}
+        </ProductViewer>
+        <div className="product-gallery-wrap"><div className="product-gallery-heading"><span>Explore the collection</span><div><button aria-label="Previous products" onClick={() => gallery.current?.scrollBy({ left: -450, behavior: reducedMotion() })}><ChevronLeft size={18} /></button><button aria-label="Next products" onClick={() => gallery.current?.scrollBy({ left: 450, behavior: reducedMotion() })}><ChevronRight size={18} /></button></div></div>
+          <div ref={gallery} className="product-list product-gallery" aria-label="Product families">{galleryProducts.map((p) => <button key={p.id} onClick={() => { setSelected(p.id); setProjectStatus(""); const stage = document.querySelector("#products .product-stage"); if (stage && stage.getBoundingClientRect().top < 90) stage.scrollIntoView({ behavior: reducedMotion(), block: "start" }); }} aria-pressed={product.id === p.id} aria-label={p.name}><img src={`/images/product-previews/${p.id}.jpg`} alt="" loading="lazy" width="220" height="140" /><span>{labels[p.id] || p.name}</span></button>)}</div>
         </div>
-        <div><ProductViewer key={`${product.id}:${configuration?.shelves ?? "default"}`} product={product} configuration={configuration} onFinish={configuration ? (finish) => changeConfiguration({ ...configuration, finish }) : undefined} />
-        {configuration && <ProductConfigurator product={product} config={configuration} onChange={changeConfiguration} onEnquire={onEnquire} onAdd={addToProject} />}</div>
-        <div className="product-description">
-          <p className="product-category-label">{product.category}</p>
-          <h3>{product.name}</h3>
-          <p>{product.detail}</p>
-          <ul className="product-features">{product.options.map((option) => <li key={option}>{option}</li>)}</ul>
-          <button className="text-link" onClick={() => onEnquire(product.name)}>
-            Discuss this product <ArrowUpRight size={20} />
-          </button>
-          {!configuration && <button className="button button-outline" onClick={() => addToProject(product.id, null)}>Add product to project list</button>}
-          <p className="quiet concept-note">
-            Representative 3D concepts. Final design, dimensions and equipment
-            specifications are reviewed for your project.
-            {!["worktable", "sink", "display", "cabinets", "custom"].includes(product.id)
-              ? " Image fallback represents the product family rather than this exact model."
-              : ""}
-          </p>
-        </div>
-      </div> : <div className="product-empty"><h3>No matching equipment</h3><p>Try a broader search or choose another category.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("All products"); }}>Show all products</button></div>}
-      <p className="form-status" role="status">{projectStatus}</p>
-      <ProjectList items={projectItems} onChange={setProjectItems} onEdit={editProject} onEnquire={onEnquire} storageAvailable={storageAvailable} />
+      </> : <div className="product-empty"><h3>No matching equipment</h3><p>Try a broader search or choose another category.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("All products"); }}>Show all products</button></div>}
+      <details className="project-list-disclosure" open={projectOpen} onToggle={(e) => setProjectOpen(e.currentTarget.open)}><summary><FolderOpen size={23} /><strong>Your project list ({projectItems.length})</strong><span>Save, compare and enquire in one place.</span><i>+</i></summary><ProjectList items={projectItems} onChange={setProjectItems} onEdit={editProject} onEnquire={onEnquire} storageAvailable={storageAvailable} /></details>
     </section>
   );
 }
+function reducedMotion() { return matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"; }
