@@ -11,7 +11,6 @@ import {
   Droplets,
 } from "lucide-react";
 import { products, categories } from "../lib/fasttrack-data";
-import WineChillerFilm from "./WineChillerFilm";
 function ProductViewer({ product }) {
   const canvas = useRef(null),
     root = useRef(null),
@@ -198,8 +197,13 @@ function ProductViewer({ product }) {
 }
 export default function ProductShowroom({ onEnquire }) {
   const [category, setCategory] = useState("All products"),
+    [query, setQuery] = useState(""),
     [selected, setSelected] = useState(products[0].id);
-  const visible = products.filter(
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const matches = products.filter((p) => words.every((word) =>
+    [p.name, p.category, p.description, ...p.options].join(" ").toLowerCase().includes(word),
+  ));
+  const visible = matches.filter(
     (p) => category === "All products" || p.category === category,
   );
   const product = visible.find((p) => p.id === selected) || visible[0];
@@ -211,7 +215,14 @@ export default function ProductShowroom({ onEnquire }) {
           <br />
           you work.
         </h2>
-        <p>Explore equipment in 360°.<br />See the Wine Chiller in motion.</p>
+        <p>Explore equipment in 360°. Find the right starting point for your project.</p>
+      </div>
+      <div className="product-search-bar">
+        <label htmlFor="product-search">Find your equipment
+          <input id="product-search" type="search" placeholder="Search sinks, racks, refrigerators…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        </label>
+        <span className="quiet" role="status">{visible.length} of {products.length} product families</span>
+        {(query || category !== "All products") && <button className="text-control" onClick={() => { setQuery(""); setCategory("All products"); }}>Clear filters</button>}
       </div>
       <div className="tab-rail category-rail" aria-label="Product categories">
         {categories.map((c) => (
@@ -220,11 +231,11 @@ export default function ProductShowroom({ onEnquire }) {
             aria-pressed={category === c}
             onClick={() => setCategory(c)}
           >
-            {c}
+            {c}<span className="category-count">{matches.filter((p) => c === "All products" || p.category === c).length}</span>
           </button>
         ))}
       </div>
-      <div className="showroom-layout">
+      {product ? <div className="showroom-layout">
         <div className="product-list" aria-label="Product families">
           {visible.map((p) => (
             <button
@@ -232,27 +243,29 @@ export default function ProductShowroom({ onEnquire }) {
               onClick={() => setSelected(p.id)}
               aria-pressed={product.id === p.id}
             >
-              {p.name}
+              <span className="product-list-copy"><strong>{p.name}</strong><small>{p.description}</small></span>
               <ArrowUpRight size={17} />
             </button>
           ))}
         </div>
-        {product.video ? <WineChillerFilm key={product.id} /> : <ProductViewer key={product.id} product={product} />}
+        <ProductViewer key={product.id} product={product} />
         <div className="product-description">
+          <p className="product-category-label">{product.category}</p>
           <h3>{product.name}</h3>
           <p>{product.detail}</p>
+          <ul className="product-features">{product.options.map((option) => <li key={option}>{option}</li>)}</ul>
           <button className="text-link" onClick={() => onEnquire(product.name)}>
             Discuss this product <ArrowUpRight size={20} />
           </button>
-          {!product.video && <p className="quiet concept-note">
+          <p className="quiet concept-note">
             Representative 3D concepts. Final design, dimensions and equipment
             specifications are reviewed for your project.
             {!["worktable", "sink", "display", "cabinets", "custom"].includes(product.id)
               ? " Image fallback represents the product family rather than this exact model."
               : ""}
-          </p>}
+          </p>
         </div>
-      </div>
+      </div> : <div className="product-empty"><h3>No matching equipment</h3><p>Try a broader search or choose another category.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("All products"); }}>Show all products</button></div>}
     </section>
   );
 }
