@@ -488,7 +488,7 @@ pre:focus-visible {
   transform: scaleX(var(--journey-progress));
   pointer-events: none;
 }
-.stage-rail button {
+.stage-rail > span {
   position: relative;
   border: 0;
   background: transparent;
@@ -500,10 +500,10 @@ pre:focus-visible {
   line-height: 1.4;
   color: #c7d0ca;
 }
-.stage-rail button.active {
+.stage-rail > span.active {
   color: #fff;
 }
-.stage-rail button.active:after {
+.stage-rail > span.active:after {
   position: absolute;
   content: "";
   height: 3px;
@@ -517,7 +517,7 @@ pre:focus-visible {
   color: #92a69c;
   margin-right: 4px;
 }
-.stage-rail button:hover {
+.stage-rail > span:hover {
   color: var(--accent);
 }
 .journey-caption {
@@ -1223,7 +1223,7 @@ pre:focus-visible {
     padding-top: 18px;
     font-size: 12px;
   }
-  .stage-rail button {
+  .stage-rail > span {
     padding: 16px 5px;
     font-size: 14px;
   }
@@ -1489,7 +1489,7 @@ pre:focus-visible {
     overflow-x: auto;
     scrollbar-width: none;
   }
-  .stage-rail button {
+  .stage-rail > span {
     font-size: 12px;
     flex: 0 0 auto;
     min-width: 98px;
@@ -1903,3 +1903,7 @@ pre:focus-visible {
   .production-steps { width: 100%; margin: 4px 0 0; }
   .cycle-count, .process-demo-mode { flex-basis: 100%; }
 }
+
+/* The opening sequence is a continuous story, with passive stage markers. */
+.stage-rail > span { cursor: default; }
+@media (max-width: 720px) { .journey-copy { padding-top: 115px; } }

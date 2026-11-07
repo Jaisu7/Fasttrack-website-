@@ -576,14 +576,6 @@ export function createManufacturingScene(
     rubber,
     laser,
   );
-  const punch = new THREE.Group();
-  scene.add(punch);
-  box([0.57, 0.28, 0.42], [0, 0.8, 0], graphite, punch, 0.018);
-  cylinder(0.2, 0.2, 0.42, [0, 0.46, 0], polished, punch);
-  cylinder(0.214, 0.214, 0.095, [0, 0.31, 0], graphite, punch);
-  cylinder(0.11, 0.11, 0.18, [0, 0.16, 0], polished, punch);
-  cylinder(0.043, 0.043, 0.09, [0, 0.045, 0], polished, punch);
-  for (const x of [-0.18, 0.18]) bolt([x, 0.8, 0.216], punch);
   const press = new THREE.Group();
   scene.add(press);
   box([0.33, 0.38, 1.68], [0, 0.55, 0], graphite, press);
@@ -809,26 +801,21 @@ export function createManufacturingScene(
   function draw(dt: number) {
     if (!alive || failed) return;
     const state = manufacturingState(progress);
+    const sceneProgress = state.sceneProgress;
     const easing = reduced || !dt ? 1 : 1 - Math.exp(-dt * 6);
     pointerX += (targetX - pointerX) * easing;
     pointerY += (targetY - pointerY) * easing;
     const stageMoving = !paused && !reduced;
     if (stageMoving) elapsed += dt;
-    if (state.stageIndex === 5 && stageMoving) showroomTime += dt;
-    else if (state.stageIndex !== 5) showroomTime = 0;
+    if (state.stageIndex === 4 && stageMoving) showroomTime += dt;
+    else if (state.stageIndex !== 4) showroomTime = 0;
     product.position.x = (1 - smoothRange(state.raw, 0, 1)) * 0.5;
-    plinth.visible = progress < 0.115;
-    plinth.position.y = 0.47 - smoothRange(progress, 0.065, 0.115) * 1.1;
+    plinth.visible = sceneProgress < 0.115;
+    plinth.position.y = 0.47 - smoothRange(sceneProgress, 0.065, 0.115) * 1.1;
     product.rotation.y =
-      smoothRange(state.finish, 0.05, 1) * Math.PI * 0.58 +
-      (state.stageIndex === 5 ? showroomTime * 0.14 : 0);
+      smoothRange(state.finish, 0.05, 1) * (-0.22 + Math.sin(showroomTime * 0.2) * 0.26);
     primaryRig.rotation.x = (state.upright * Math.PI) / 2;
-    replacePrimary(
-      Math.min(
-        punchPoints.length,
-        Math.floor(state.punch * punchPoints.length + 0.35),
-      ),
-    );
+    replacePrimary(0);
     foldPrimary(state.foldLeft, state.foldRight);
     const laserPath = pathAt(state.laser);
     cutGeometry.setDrawRange(
@@ -841,59 +828,42 @@ export function createManufacturingScene(
       Math.min(12, laserPath.cutCount) * 2,
     );
     hotLine.visible = state.stageIndex === 1 && laserPath.cutting;
-    const benchRetreat = smoothRange(progress, 0.652, 0.7);
+    const benchRetreat = smoothRange(sceneProgress, 0.652, 0.7);
     bench.position.y = -benchRetreat * 1.3;
-    bench.visible = progress >= 0.075 && benchRetreat < 0.999;
+    bench.visible = sceneProgress >= 0.075 && benchRetreat < 0.999;
     product.updateMatrixWorld(true);
-    laser.visible = progress > 0.115 && progress < 0.355;
+    laser.visible = sceneProgress > 0.115 && sceneProgress < 0.355;
     const laserPresence =
-      smoothRange(progress, 0.115, 0.145) *
-      (1 - smoothRange(progress, 0.327, 0.355));
+      smoothRange(sceneProgress, 0.115, 0.145) *
+      (1 - smoothRange(sceneProgress, 0.327, 0.355));
     laser.position.copy(primaryRig.localToWorld(laserPath.point.clone()));
     laser.position.y += 0.012 + (1 - laserPresence) * 1.8;
-    punch.visible = progress > 0.332 && progress < 0.513;
-    const punchPosition = Math.min(
-      punchPoints.length - 1,
-      Math.floor(state.punch * punchPoints.length),
-    );
-    const phase = (state.punch * punchPoints.length) % 1;
-    const previous = punchPoints[Math.max(0, punchPosition - 1)];
-    const punchPoint = previous
-      .clone()
-      .lerp(punchPoints[punchPosition], smoothRange(phase, 0.02, 0.31));
-    const stroke =
-      smoothRange(phase, 0.33, 0.59) * (1 - smoothRange(phase, 0.71, 0.94));
-    const punchPresence =
-      smoothRange(progress, 0.332, 0.35) *
-      (1 - smoothRange(progress, 0.49, 0.513));
-    punch.position.copy(primaryRig.localToWorld(punchPoint));
-    punch.position.y += (1 - stroke) * 0.2 + (1 - punchPresence) * 1.5;
-    press.visible = lowerDie.visible = progress > 0.49 && progress < 0.666;
-    const pressX = -1 + smoothRange(progress, 0.575, 0.587) * 2;
+    press.visible = lowerDie.visible = sceneProgress > 0.49 && sceneProgress < 0.666;
+    const pressX = -1 + smoothRange(sceneProgress, 0.575, 0.587) * 2;
     const pressStroke =
-      progress < 0.582
-        ? smoothRange(progress, 0.498, 0.51) *
-          (1 - smoothRange(progress, 0.566, 0.577))
-        : smoothRange(progress, 0.585, 0.591) *
-          (1 - smoothRange(progress, 0.648, 0.654));
+      sceneProgress < 0.582
+        ? smoothRange(sceneProgress, 0.498, 0.51) *
+          (1 - smoothRange(sceneProgress, 0.566, 0.577))
+        : smoothRange(sceneProgress, 0.585, 0.591) *
+          (1 - smoothRange(sceneProgress, 0.648, 0.654));
     const pressPresence =
-      smoothRange(progress, 0.49, 0.51) *
-      (1 - smoothRange(progress, 0.65, 0.666));
+      smoothRange(sceneProgress, 0.49, 0.51) *
+      (1 - smoothRange(sceneProgress, 0.65, 0.666));
     press.position.set(
       pressX,
       0.875 + (1 - pressStroke) * 0.65 + (1 - pressPresence) * 1.3,
       0,
     );
     lowerDie.position.set(pressX, -benchRetreat * 1.3, 0);
-    additional.visible = progress > 0.677;
-    const parts = smoothRange(progress, 0.679, 0.731);
+    additional.visible = sceneProgress > 0.677;
+    const parts = smoothRange(sceneProgress, 0.679, 0.731);
     topPanel.position.set(
       0,
       0.675 + (1 - parts) * 1.3,
       0.35 - (1 - parts) * 0.4,
     );
     basePanel.position.set((1 - parts) * 1.9, -0.65, 0.35 + (1 - parts) * 0.5);
-    const shelf = interiorShelfState(progress);
+    const shelf = interiorShelfState(sceneProgress);
     shelfPanel.visible = shelf.visible;
     shelfPanel.position.set(...(shelf.position as Vec3));
     for (const { root, sign } of doors) {
@@ -908,7 +878,7 @@ export function createManufacturingScene(
     let remaining = state.weld * weldLength;
     for (const bead of beads) {
       const amount = clampProgress(remaining / bead.length);
-      bead.object.visible = amount > 0 && progress >= 0.705;
+      bead.object.visible = amount > 0 && sceneProgress >= 0.705;
       bead.object.geometry.setDrawRange(
         0,
         Math.floor(amount * bead.count) * 6 * 6,
@@ -917,16 +887,16 @@ export function createManufacturingScene(
     }
     product.updateMatrixWorld(true);
     const weldPoint = product.localToWorld(weldAt(state.weld));
-    torch.visible = progress > 0.692 && progress < 0.85;
+    torch.visible = sceneProgress > 0.692 && sceneProgress < 0.85;
     const torchPresence =
-      smoothRange(progress, 0.692, 0.712) *
-      (1 - smoothRange(progress, 0.826, 0.85));
+      smoothRange(sceneProgress, 0.692, 0.712) *
+      (1 - smoothRange(sceneProgress, 0.826, 0.85));
     torch.position.copy(weldPoint);
     torch.position.y += (1 - torchPresence) * 1.4;
     const cutting =
       state.stageIndex === 1 && laserPath.cutting && laserPresence > 0.5;
     const welding =
-      state.stageIndex === 4 &&
+      state.stageIndex === 3 &&
       state.weld > 0 &&
       state.weld < 1 &&
       torchPresence > 0.5;
@@ -1017,7 +987,7 @@ export function createManufacturingScene(
     draw(dt);
     dirtyFrames = Math.max(0, dirtyFrames - 1);
     const state = manufacturingState(progress);
-    const ambient = !paused && !reduced && [1, 4, 5].includes(state.stageIndex);
+    const ambient = !paused && !reduced && [1, 3, 4].includes(state.stageIndex);
     const pointerMoving =
       Math.abs(pointerX - targetX) + Math.abs(pointerY - targetY) > 0.001;
     if (ambient || dirtyFrames || pointerMoving) wake();

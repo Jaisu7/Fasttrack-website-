@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 const processes = [
   {
     id: "laser",
@@ -40,7 +40,6 @@ function ProcessScene({ process }) {
     engine = useRef(null),
     [ready, setReady] = useState(false),
     [failed, setFailed] = useState(false),
-    [paused, setPaused] = useState(false),
     [manual, setManual] = useState(false),
     [reduced, setReduced] = useState(false),
     [cycle, setCycle] = useState({ phase: "working", index: 0 });
@@ -86,18 +85,6 @@ function ProcessScene({ process }) {
       engine.current = null;
     };
   }, [process.id]);
-  const pause = () => {
-    engine.current?.pause(!paused);
-    setPaused(!paused);
-  };
-  const reset = () => {
-    engine.current?.reset();
-    setManual(false);
-  };
-  const automatic = () => {
-    engine.current?.automatic();
-    setManual(false);
-  };
   function key(e) {
     const v = {
       ArrowLeft: [-0.025, 0],
@@ -109,11 +96,7 @@ function ProcessScene({ process }) {
       e.preventDefault();
       engine.current?.nudge(...v);
     }
-    if (e.key === " ") {
-      e.preventDefault();
-      pause();
-    }
-    if (e.key.toLowerCase() === "r") reset();
+
   }
   return (
     <div className="process-layout" ref={root}>
@@ -122,27 +105,6 @@ function ProcessScene({ process }) {
         <p className="process-lead">{process.copy}</p>
         <div className="process-instructions">
           <p id={`instructions-${process.id}`}>{process.instruction}</p>
-          <div className="controls">
-            <button
-              className="button button-outline"
-              onClick={pause}
-              disabled={!ready || reduced}
-              aria-pressed={paused}
-            >
-              {paused ? <Play size={17} /> : <Pause size={17} />}{" "}
-              {paused ? "Resume animation" : "Pause animation"}
-            </button>
-            <button
-              className="button button-outline"
-              disabled={!ready}
-              onClick={reset}
-            >
-              <RotateCcw size={17} /> Restart cycle
-            </button>
-          </div>
-          <button className="subtle-link process-demo-mode" onClick={automatic} disabled={!ready || reduced || !manual}>
-            Return to automatic cycle
-          </button>
           <ol className="production-steps" aria-label="Production cycle">
             {[ ["working", "Working"], ["complete", "Finished"], ["ejecting", "Release"], ["loading", "New sheet"] ].map(([phase, label], i, items) => (
               <li key={phase} className={cycle.phase === phase ? "active" : items.findIndex(([p]) => p === cycle.phase) > i ? "done" : ""} aria-current={cycle.phase === phase ? "step" : undefined}>
@@ -155,12 +117,10 @@ function ProcessScene({ process }) {
             {failed
               ? "Still preview"
               : !ready
-                ? "Loading processâ€¦"
+                ? "Loading process..."
                 : reduced
                   ? "Reduced motion Â· Finished workpiece"
-                  : paused
-                    ? "Animation paused"
-                    : manual
+                  : manual
                       ? "Manual tool guidance"
                       : "Finish â†’ release â†’ fresh blank"}
           </p>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUpRight, Pause, Play, RotateCcw } from "lucide-react";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { manufacturingState } from "../lib/journey-state.mjs";
 export const journeyStages = [
   {
@@ -13,12 +13,6 @@ export const journeyStages = [
     jump: 0.25,
     title: "Precision starts with a single cut.",
     copy: "The original Fastrack mark takes shape in the steel. Every contour follows the same primary panel.",
-  },
-  {
-    name: "Punch",
-    jump: 0.43,
-    title: "Every detail has a purpose.",
-    copy: "The tool lifts, the sheet positions, and each stroke creates a clean, repeatable opening.",
   },
   {
     name: "Bend",
@@ -47,12 +41,10 @@ export default function ManufacturingJourney() {
     engine = useRef(null),
     trigger = useRef(null),
     progress = useRef(0),
-    pausedRef = useRef(false),
     stageRef = useRef(0);
   const [stage, setStage] = useState(0),
     [ready, setReady] = useState(false),
     [fallback, setFallback] = useState(false),
-    [paused, setPaused] = useState(false),
     [reduced, setReduced] = useState(
       () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     );
@@ -91,7 +83,7 @@ export default function ManufacturingJourney() {
   useEffect(() => {
     let alive = true,
       context;
-    if (reduced) return;
+    if (reduced) { show(1); return; }
     Promise.all([import("gsap"), import("gsap/ScrollTrigger")])
       .then(([{ gsap }, { ScrollTrigger }]) => {
         if (!alive) return;
@@ -105,14 +97,14 @@ export default function ManufacturingJourney() {
               p: 1,
               ease: "none",
               onUpdate: () => {
-                if (!pausedRef.current) show(state.p);
+                show(state.p);
               },
               scrollTrigger: {
                 trigger: root.current,
                 pin: pin.current,
                 start: "top top",
                 end: () =>
-                  `+=${window.innerHeight * (window.innerWidth < 720 ? 3.6 : 5.2)}`,
+                  `+=${window.innerHeight * (window.innerWidth < 720 ? 2.7 : 3.6)}`,
                 scrub: 0.6,
                 invalidateOnRefresh: true,
                 anticipatePin: 1,
@@ -123,7 +115,7 @@ export default function ManufacturingJourney() {
         }, root);
       })
       .catch(() => {
-        /* Manual stage selection remains available. */
+        show(1);
       });
     return () => {
       alive = false;
@@ -131,34 +123,6 @@ export default function ManufacturingJourney() {
       trigger.current = null;
     };
   }, [reduced]);
-  function select(i) {
-    const p = journeyStages[i].jump;
-    pausedRef.current = false;
-    setPaused(false);
-    engine.current?.pause(false);
-    if (trigger.current && !reduced) {
-      window.scrollTo({
-        top:
-          trigger.current.start +
-          p * (trigger.current.end - trigger.current.start),
-        behavior: "smooth",
-      });
-    } else show(p);
-  }
-  function toggle() {
-    const value = !paused;
-    pausedRef.current = value;
-    setPaused(value);
-    engine.current?.pause(value);
-    if (!value && trigger.current) show(trigger.current.progress);
-  }
-  function skip(event) {
-    event.preventDefault();
-    document.getElementById("studio")?.scrollIntoView({
-      behavior: reduced ? "instant" : "smooth",
-    });
-    document.getElementById("studio")?.focus({ preventScroll: true });
-  }
   const s = journeyStages[stage];
   return (
     <section
@@ -194,7 +158,7 @@ export default function ManufacturingJourney() {
         <div className="journey-shade" />
         <div className="journey-copy" key={stage}>
           <div className="journey-text">
-            <p className="journey-stage-label">0{stage + 1} / 06 · {s.name}</p>
+            <p className="journey-stage-label">0{stage + 1} / 05 · {s.name}</p>
             <h1
               aria-label={s.title}
               className={stage === 0 ? "hero-title" : "stage-title"}
@@ -213,76 +177,41 @@ export default function ManufacturingJourney() {
             </h1>
             <p>{s.copy}</p>
             <div className="hero-actions">
-              {stage === 5 ? (
-                <a href="#products" className="button button-light">
-                  Explore Products <ArrowUpRight size={20} />
-                </a>
-              ) : (
-                <button
-                  className="button button-light"
-                  onClick={() =>
-                    select(stage === 0 ? 1 : Math.min(5, stage + 1))
-                  }
-                >
-                  {stage === 0 ? "Explore the process" : "Next process"}{" "}
-                  <ArrowDown size={20} />
-                </button>
-              )}
+              <a href="#products" className="button button-light">
+                Explore Products <ArrowUpRight size={20} />
+              </a>
             </div>
           </div>
-        </div>
-        <div className="journey-tools">
-          <button
-            className="journey-control"
-            onClick={toggle}
-            disabled={!ready || fallback || reduced}
-            aria-label={
-              paused
-                ? "Resume manufacturing animation"
-                : "Pause manufacturing animation"
-            }
-            aria-pressed={paused}
-          >
-            {paused ? <Play size={17} /> : <Pause size={17} />}
-            {paused ? "Resume animation" : "Pause animation"}
-          </button>
-          <button className="journey-control journey-restart" onClick={() => select(0)} aria-label="Restart manufacturing journey">
-            <RotateCcw size={16} /> Restart
-          </button>
-          <a href="#studio" className="journey-control journey-skip" onClick={skip}>
-            Skip intro <ArrowDown size={16} />
-          </a>
         </div>
         <div className="journey-bottom">
           <div className="stage-rail" aria-label="Manufacturing stages">
             {journeyStages.map((item, i) => (
-              <button
+              <span
                 key={item.name}
                 className={stage === i ? "active" : ""}
                 aria-current={stage === i ? "step" : undefined}
-                onClick={() => select(i)}
               >
                 <span className="stage-number">0{i + 1}</span> {item.name}
-              </button>
+              </span>
             ))}
           </div>
           <div className="journey-caption">
             <span>Fastrack — Engineered in Steel.</span>
             <span className="scroll-hint">
-              {reduced ? "Select a stage to explore" : paused ? "Animation paused · Resume when ready" : "Scroll to manufacture"}{" "}
+              {reduced ? "Engineered in steel" : "Scroll to discover"}{" "}
               <ArrowDown size={17} />
             </span>
           </div>
         </div>
         <span className="sr-only" aria-live="polite">
-          Stage {stage + 1} of 6: {s.name}.
+          Stage {stage + 1} of 5: {s.name}.
         </span>
         {!ready && !fallback && (
           <span className="scene-loading">Preparing the steel…</span>
         )}
         {fallback && (
           <span className="scene-loading">
-            Still preview · Select a stage to read the story
+            Steel fabrication · From material to finished equipment
           </span>
         )}
       </div>

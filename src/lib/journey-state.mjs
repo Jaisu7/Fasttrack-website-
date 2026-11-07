@@ -1,14 +1,13 @@
 export const manufacturingStages = [
   "raw-steel",
   "laser-cutting",
-  "cnc-punching",
   "press-brake",
   "welding",
   "showroom",
 ];
 export const clampProgress = (value) =>
   Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
-const thresholds = [0, 0.14, 0.34, 0.5, 0.68, 0.84, 1];
+const thresholds = [0, 0.14, 0.34, 0.5776, 0.7888, 1];
 export const smoothRange = (value, start, end) => {
   const t = clampProgress((value - start) / (end - start));
   return t * t * (3 - 2 * t);
@@ -38,29 +37,30 @@ export function interiorShelfState(value) {
 export function manufacturingState(value) {
   const progress = clampProgress(value);
   const stageIndex = Math.min(
-    5,
+    4,
     thresholds.findIndex((threshold, i) => i > 0 && progress < threshold) - 1,
   );
-  const index = stageIndex < 0 ? 5 : stageIndex;
+  const index = stageIndex < 0 ? 4 : stageIndex;
   const phase = clampProgress(
     (progress - thresholds[index]) /
       (thresholds[index + 1] - thresholds[index]),
   );
+  const sceneProgress = progress < 0.34 ? progress : 0.5 + ((progress - 0.34) / 0.66) * 0.5;
   return {
+    sceneProgress,
     progress,
     stageIndex: index,
     stage: manufacturingStages[index],
     phase,
-    raw: clampProgress(progress / 0.14),
-    laser: clampProgress((progress - 0.14) / 0.2),
-    punch: clampProgress((progress - 0.34) / 0.16),
-    bend: clampProgress((progress - 0.5) / 0.18),
-    weld: clampProgress((progress - 0.705) / 0.125),
-    finish: clampProgress((progress - 0.84) / 0.16),
-    foldLeft: smoothRange(progress, 0.511, 0.565),
-    foldRight: smoothRange(progress, 0.591, 0.647),
-    upright: smoothRange(progress, 0.652, 0.683),
-    assembly: smoothRange(progress, 0.658, 0.725),
-    doors: smoothRange(progress, 0.788, 0.895),
+    raw: clampProgress(sceneProgress / 0.14),
+    laser: clampProgress((sceneProgress - 0.14) / 0.2),
+    bend: clampProgress((sceneProgress - 0.5) / 0.18),
+    weld: clampProgress((sceneProgress - 0.705) / 0.125),
+    finish: clampProgress((sceneProgress - 0.84) / 0.16),
+    foldLeft: smoothRange(sceneProgress, 0.511, 0.565),
+    foldRight: smoothRange(sceneProgress, 0.591, 0.647),
+    upright: smoothRange(sceneProgress, 0.652, 0.683),
+    assembly: smoothRange(sceneProgress, 0.658, 0.725),
+    doors: smoothRange(sceneProgress, 0.788, 0.895),
   };
 }

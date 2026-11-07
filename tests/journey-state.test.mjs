@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as module from "../src/lib/journey-state.mjs";
-test("six stage shortcuts select the actual rendered machine stage", () => {
-  [0, 0.25, 0.43, 0.61, 0.78, 1].forEach((p, index) =>
+test("five manufacturing stages omit punching throughout the intro", () => {
+  [0, 0.25, 0.43, 0.7, 1].forEach((p, index) =>
     assert.equal(module.manufacturingState(p).stageIndex, index),
   );
 });
