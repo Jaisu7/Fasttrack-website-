@@ -1,0 +1,20 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+.sites-runtime/
+.sites-dependencies/
+.sites-checkout/
+.openai/.local/
+.artifacts/
+coverage/
+Thumbs.db
+
+# Recovery copies and generated downloads
+/Fastrack-Codex-Handoff/
+/Fastrack-Original/
+/fastrack-deploy.tar.gz
+/Fastrack-Website-All-Code.zip
