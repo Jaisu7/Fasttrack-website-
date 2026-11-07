@@ -21,6 +21,8 @@ function ProductViewer({ product }) {
     [lighting, setLighting] = useState(0),
     [exploded, setExploded] = useState(false),
     [operation, setOperation] = useState(false),
+    [opening, setOpening] = useState(0),
+    [view, setView] = useState("perspective"),
     [finish, setFinish] = useState(0),
     [reduced, setReduced] = useState(
       () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -38,6 +40,7 @@ function ProductViewer({ product }) {
             ready: () => alive && setReady(true),
             unavailable: () => alive && setFailed(true),
             rotation: (v) => alive && setRotation(v),
+            operation: (amount) => { if (alive) { setOperation(amount > 0); setOpening(Math.round(amount * 100)); } },
           });
         } catch {
           if (alive) setFailed(true);
@@ -63,6 +66,8 @@ function ProductViewer({ product }) {
     setLighting(0);
     setExploded(false);
     setOperation(false);
+    setOpening(0);
+    setView("perspective");
     setFinish(0);
   }
   const action =
@@ -116,6 +121,12 @@ function ProductViewer({ product }) {
           {lighting === 0 ? "Studio" : lighting === 1 ? "Warm" : "Cool"}{" "}
           lighting
         </span>
+      </div>
+      <div className="product-view-tools" aria-label="Product camera controls">
+        <div className="product-view-presets" aria-label="View angle">
+          {[["perspective", "Studio"], ["front", "Front"], ["side", "Side"], ["top", "Top"]].map(([id, label]) => <button key={id} disabled={!ready} aria-pressed={view === id} onClick={() => { setView(id); engine.current?.setView(id); }}>{label}</button>)}
+        </div>
+        <div className="product-zoom-controls"><button disabled={!ready} aria-label="Zoom out product" onClick={() => engine.current?.zoom(1.18)}>−</button><button disabled={!ready} aria-label="Zoom in product" onClick={() => engine.current?.zoom(0.85)}>+</button></div>
       </div>
       <div className="viewer-controls">
         <button
@@ -192,6 +203,11 @@ function ProductViewer({ product }) {
           </label>
         </div>
       )}
+      {ready && product.operation === "doors" && <div className="door-opening-control">
+        <label htmlFor={`door-${product.id}`}>Door opening <span>{Math.round(opening * 86 / 100)}°</span></label>
+        <input id={`door-${product.id}`} aria-label="Door opening" type="range" min="0" max="100" value={opening} onChange={(e) => engine.current?.setOperation(Number(e.target.value) / 100)} />
+        <p className="quiet">Drag to inspect the interior, or tap a door on the model. Arrow keys rotate the view.</p>
+      </div>}
     </div>
   );
 }

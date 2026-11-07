@@ -7,7 +7,9 @@ export interface ProductViewerEngine {
   setRotation(value: boolean): void;
   setLighting(mode: 0 | 1 | 2): void;
   setAssembly(value: boolean): void;
-  setOperation(value: boolean): void;
+  setOperation(value: boolean | number): void;
+  setView(view: "perspective" | "front" | "side" | "top"): void;
+  zoom(factor: number): void;
   setFinish(mode: 0 | 1): void;
   rotate(dx: number, dy: number): void;
   reset(): void;
@@ -18,6 +20,7 @@ type Callbacks = {
   ready(): void;
   unavailable(): void;
   rotation?(enabled: boolean): void;
+  operation?(amount: number): void;
 };
 
 export function createProductViewer(
@@ -30,6 +33,8 @@ export function createProductViewer(
     setLighting() {},
     setAssembly() {},
     setOperation() {},
+    setView() {},
+    zoom() {},
     setFinish() {},
     rotate() {},
     reset() {},
@@ -71,7 +76,7 @@ export function createProductViewer(
   }
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xb6bdb9);
+  scene.background = new THREE.Color(0xc5c9cb);
   const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 60);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -163,7 +168,7 @@ export function createProductViewer(
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(200, 200),
     new THREE.MeshStandardMaterial({
-      color: 0x737c77,
+      color: 0x858b90,
       envMapIntensity: 0.15,
       roughness: 0.95,
       metalness: 0,
@@ -339,6 +344,7 @@ export function createProductViewer(
     ).toFixed(3);
     canvas.dataset.poseZoom = assemblyCameraScale.toFixed(3);
     canvas.dataset.operationProgress = operation.toFixed(3);
+    canvas.dataset.distance = camera.position.distanceTo(controls.target).toFixed(3);
     canvas.dataset.azimuth = (
       ((controls.getAzimuthalAngle() % (2 * Math.PI)) + 2 * Math.PI) %
       (2 * Math.PI)
@@ -402,6 +408,20 @@ export function createProductViewer(
     dirtyFrames = 2;
     wake();
   }
+  const raycaster = new THREE.Raycaster();
+  let pointerStart = { x: 0, y: 0 };
+  const onPointerDown = (event: PointerEvent) => { pointerStart = { x: event.clientX, y: event.clientY }; };
+  const onPointerUp = (event: PointerEvent) => {
+    if (Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 7 || assemblyTarget > 0) return;
+    const rect = canvas.getBoundingClientRect();
+    raycaster.setFromCamera(new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1), camera);
+    const hit = raycaster.intersectObject(model.group, true)[0];
+    let part: THREE.Object3D | null = hit?.object || null;
+    while (part && !part.userData.operable) part = part.parent;
+    if (part) { operationTarget = operationTarget > 0 ? 0 : 1; callbacks.operation?.(operationTarget); dirtyFrames = 2; wake(); }
+  };
+  canvas.addEventListener("pointerdown", onPointerDown);
+  canvas.addEventListener("pointerup", onPointerUp);
   const observer = new IntersectionObserver(
     (entries) => {
       visible = entries[0].isIntersecting;
@@ -446,9 +466,22 @@ export function createProductViewer(
       wake();
     },
     setOperation(value) {
-      operationTarget = value ? 1 : 0;
+      operationTarget = typeof value === "number" ? THREE.MathUtils.clamp(value, 0, 1) : value ? 1 : 0;
+      callbacks.operation?.(operationTarget);
       dirtyFrames = 2;
       wake();
+    },
+    setView(view) {
+      controls.autoRotate = false; callbacks.rotation?.(false);
+      const directions = { perspective: homeDirection, front: new THREE.Vector3(0, 0.05, 1), side: new THREE.Vector3(1, 0.05, 0), top: new THREE.Vector3(0, 1, 0.01) };
+      camera.position.copy(controls.target).addScaledVector(directions[view].clone().normalize(), distance * assemblyCameraScale);
+      controls.update(); dirtyFrames = 2; wake();
+      canvas.dataset.view = view;
+    },
+    zoom(factor) {
+      const ray = camera.position.clone().sub(controls.target);
+      ray.setLength(THREE.MathUtils.clamp(ray.length() * factor, controls.minDistance, controls.maxDistance));
+      camera.position.copy(controls.target).add(ray); controls.update(); dirtyFrames = 2; wake();
     },
     setFinish(mode) {
       finish = mode;
@@ -500,6 +533,8 @@ export function createProductViewer(
       if (!alive) return;
       alive = false;
       stop();
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointerup", onPointerUp);
       observer.disconnect();
       dimensions.disconnect();
       controls.removeEventListener("change", onChange);

@@ -28,7 +28,7 @@ export function createProductModel(id: string): ProductModel {
   let operationContinuous = false;
   const grain = brushedTexture();
   const steel = new THREE.MeshPhysicalMaterial({
-    color: 0xc4cbc7,
+    color: 0xc2c8cc,
     metalness: 0.96,
     roughness: 0.24,
     roughnessMap: grain,
@@ -37,7 +37,8 @@ export function createProductModel(id: string): ProductModel {
     envMapIntensity: 1.15,
     clearcoat: 0.12,
     clearcoatRoughness: 0.3,
-    anisotropy: 0.4,
+    anisotropy: 0.65,
+    anisotropyRotation: Math.PI / 2,
   });
   const polished = new THREE.MeshStandardMaterial({
     color: 0xc8d1cd,
@@ -213,6 +214,9 @@ export function createProductModel(id: string): ProductModel {
     legs(2.16, 0.78, 1.38);
     const top = box([2.4, 0.075, 1.02], [0, 1.42, 0], steel, group, 0.015);
     explode(top, [0, 0.48, 0]);
+    // Folded worktop hems and underside reinforcement channels.
+    for (const z of [-0.482, 0.482]) box([2.34, 0.055, 0.022], [0, 1.365, z]);
+    for (const x of [-0.75, 0.75]) box([0.06, 0.06, 0.88], [x, 1.33, 0]);
     const shelf = tray(2.17, 0.79, 0.35);
     explode(shelf, [0, 0.16, 0.4]);
     for (const x of [-1.08, 1.08])
@@ -481,6 +485,15 @@ export function createProductModel(id: string): ProductModel {
     explode(top, [0, 0.35, 0]);
     // Shelves remain inside the assembled shell with a gap behind the closed door.
     const shelfWidth = width - 0.17;
+    // Recessed liner, shelf rails and attachment points inside the cabinet.
+    const liner = steel.clone(); liner.roughness = 0.42;
+    box([width - 0.14, 2.04, 0.018], [0, 1.26, -0.469], liner, shell);
+    for (const sign of [-1, 1]) {
+      box([0.022, 1.86, 0.04], [sign * (width / 2 - 0.085), 1.25, -0.39], polished, shell);
+      for (let n = 0; n < 12; n++) {
+        box([0.025, 0.018, 0.007], [sign * (width / 2 - 0.085), 0.46 + n * 0.14, -0.365], dark, shell);
+      }
+    }
     for (let level = 0; level < (hot ? 5 : 4); level++) {
       const shelf = tray(shelfWidth, 0.85, 0.52 + level * (hot ? 0.33 : 0.43), shell);
       shelf.name = `${id}-internal-shelf-${level}`;
@@ -493,6 +506,9 @@ export function createProductModel(id: string): ProductModel {
     box([0.26, 0.09, 0.014], [hot ? 0.18 : 0.4, 2.33, 0.541], screen, shell);
     for (let i = 0; i < 4; i++)
       box([0.18, 0.01, 0.018], [hot ? -0.24 : -0.4, 2.28 + i * 0.035, 0.54], polished, shell);
+    for (let n = 0; n < 11; n++) {
+      box([width - 0.22, 0.012, 0.02], [0, 2.395 + n * 0.007, 0.54], polished, shell);
+    }
     const doorCount = hot ? 1 : 2;
     for (let index = 0; index < doorCount; index++) {
       const sign = hot ? -1 : index === 0 ? -1 : 1;
@@ -500,6 +516,7 @@ export function createProductModel(id: string): ProductModel {
       const doorHeight = 1.94;
       const hinge = new THREE.Group();
       hinge.name = `${id}-door-${index}`;
+      hinge.userData.operable = true;
       hinge.position.set(sign * (width / 2 - 0.065), 1.23, 0.535);
       shell.add(hinge);
       const doorCenter = -sign * doorWidth / 2;
@@ -511,6 +528,16 @@ export function createProductModel(id: string): ProductModel {
         }
       } else {
         box([doorWidth - 0.01, doorHeight, 0.065], [doorCenter, 0, 0], steel, hinge, 0.016);
+      }
+      // Insulated inner door liner and continuous dark gasket, carried by the hinge.
+      if (!hot) box([doorWidth - 0.1, doorHeight - 0.1, 0.026], [doorCenter, 0, -0.047], steel, hinge);
+      for (const edge of [-1, 1]) {
+        box([0.018, doorHeight - 0.06, 0.018], [doorCenter + edge * (doorWidth / 2 - 0.035), 0, -0.046], rubber, hinge);
+        box([doorWidth - 0.06, 0.018, 0.018], [doorCenter, edge * (doorHeight / 2 - 0.035), -0.046], rubber, hinge);
+      }
+      for (const y of [-0.65, 0.65]) {
+        box([0.048, 0.105, 0.035], [0, y, 0.028], polished, hinge);
+        bolt([0, y, 0.048], hinge);
       }
       const handleX = doorCenter - sign * (doorWidth / 2 - 0.13);
       rod([handleX, -0.26, 0.09], [handleX, 0.26, 0.09], 0.019, polished, hinge);
@@ -541,6 +568,8 @@ export function createProductModel(id: string): ProductModel {
     for (const sign of [-1, 1]) {
       const hinge = new THREE.Group();
       shell.add(hinge);
+      hinge.userData.operable = true;
+      hinge.name = "cabinet-door";
       hinge.position.set(sign * 1.105, 0.81, 0.487);
       const center = -sign * 0.546;
       box([1.081, 1.1, 0.038], [center, 0, 0], steel, hinge, 0.012);

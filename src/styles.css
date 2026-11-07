@@ -1968,3 +1968,15 @@ html[data-theme="light"] .enquiry-form textarea::placeholder { color: #637469; }
 .product-empty h3 { font-size: 32px; margin-bottom: 14px; }
 .product-empty p { color: var(--muted); margin-bottom: 24px; }
 @media (max-width:720px) { .product-search-bar { flex-wrap: wrap; gap: 12px; } .product-search-bar label { flex-basis: 100%; max-width: none; } .product-search-bar > .quiet, .product-search-bar > button { margin-bottom: 0; font-size: 11px; } .product-list-copy small { display: none; } .product-list-copy strong { font-size: 12px; } }
+.product-view-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.product-view-presets, .product-zoom-controls { display: inline-flex; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+.product-view-tools button { min-width: 42px; min-height: 38px; padding: 9px 13px; border: 0; border-right: 1px solid var(--rule); background: transparent; color: var(--muted); font-size: 11px; }
+.product-view-tools button:last-child { border-right: 0; }
+.product-view-tools button[aria-pressed="true"] { background: var(--accent); color: #102719; }
+html[data-theme="light"] .product-view-tools button[aria-pressed="true"] { color: #fff; }
+.product-zoom-controls button { font-size: 19px; padding: 4px 10px; }
+.door-opening-control { border-top: 1px solid var(--rule); margin-top: 22px; padding-top: 18px; }
+.door-opening-control label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text); }
+.door-opening-control input { width: 100%; accent-color: var(--accent); margin: 16px 0 10px; }
+.door-opening-control p { font-size: 11px; }
+@media(max-width:720px) { .product-view-tools { gap: 8px; } .product-view-tools button { min-width: 35px; padding: 8px 10px; } }
