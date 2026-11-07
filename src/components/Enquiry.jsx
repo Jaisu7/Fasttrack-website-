@@ -127,6 +127,7 @@ export default function Enquiry({ requirement, setRequirement, configurationDeta
                 {[
                   ...products.map((product) => product.name),
                   "Laser / punching / bending / welding",
+                  "Multiple equipment / project list",
                   "Other project",
                 ].map((p) => (
                   <option key={p}>{p}</option>
@@ -143,7 +144,7 @@ export default function Enquiry({ requirement, setRequirement, configurationDeta
               placeholder="Tell us about your project, scope and any key requirements."
               required
               minLength="15"
-              maxLength="4000"
+              maxLength="30000"
               rows="4"
             />
           </label>

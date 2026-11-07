@@ -10,6 +10,8 @@ import {
   Lightbulb,
   Droplets,
 } from "lucide-react";
+import ProjectList from "./ProjectList";
+import { PROJECT_STORAGE_KEY, addProjectItem, readProject } from "../lib/project-list.mjs";
 import ProductConfigurator from "./ProductConfigurator";
 import { normalizeConfiguration, supportsConfiguration } from "../lib/product-configuration.mjs";
 import { products, categories } from "../lib/fasttrack-data";
@@ -225,7 +227,27 @@ export default function ProductShowroom({ onEnquire }) {
   const [category, setCategory] = useState("All products"),
     [query, setQuery] = useState(""),
     [configurations, setConfigurations] = useState({}),
+    [projectItems, setProjectItems] = useState(() => { try { return readProject(localStorage.getItem(PROJECT_STORAGE_KEY), products); } catch { return []; } }),
+    [storageAvailable, setStorageAvailable] = useState(true),
+    [projectStatus, setProjectStatus] = useState(""),
     [selected, setSelected] = useState(products[0].id);
+  useEffect(() => { try { localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify({ version: 1, items: projectItems })); } catch { setStorageAvailable(false); } }, [projectItems]);
+  useEffect(() => {
+    const sync = (event) => { if (event.key === PROJECT_STORAGE_KEY) setProjectItems(readProject(event.newValue, products)); };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+  function addToProject(productId, config) {
+    const next = addProjectItem(projectItems, productId, config, crypto.randomUUID());
+    if (next === projectItems) { setProjectStatus("Your list has 30 configurations. Remove an item before adding another."); return; }
+    setProjectItems(next); setProjectStatus("Added to your project list below. Matching configurations are combined.");
+  }
+  function editProject(item) {
+    setCategory("All products"); setQuery(""); setSelected(item.productId);
+    if (item.configuration) setConfigurations((current) => ({ ...current, [item.productId]: { ...item.configuration, quantity: item.quantity } }));
+    document.getElementById("products")?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    setProjectStatus("Adjust the preview, then add it as a new option to compare. The saved option stays in your list.");
+  }
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matches = products.filter((p) => words.every((word) =>
     [p.name, p.category, p.description, ...p.options].join(" ").toLowerCase().includes(word),
@@ -251,6 +273,7 @@ export default function ProductShowroom({ onEnquire }) {
           <input id="product-search" type="search" placeholder="Search sinks, racks, refrigerators…" value={query} onChange={(e) => setQuery(e.target.value)} />
         </label>
         <span className="quiet" role="status">{visible.length} of {products.length} product families</span>
+        <a className="text-control project-list-shortcut" href="#project-list">Project list ({projectItems.length})</a>
         {(query || category !== "All products") && <button className="text-control" onClick={() => { setQuery(""); setCategory("All products"); }}>Clear filters</button>}
       </div>
       <div className="tab-rail category-rail" aria-label="Product categories">
@@ -278,7 +301,7 @@ export default function ProductShowroom({ onEnquire }) {
           ))}
         </div>
         <div><ProductViewer key={`${product.id}:${configuration?.shelves ?? "default"}`} product={product} configuration={configuration} onFinish={configuration ? (finish) => changeConfiguration({ ...configuration, finish }) : undefined} />
-        {configuration && <ProductConfigurator product={product} config={configuration} onChange={changeConfiguration} onEnquire={onEnquire} />}</div>
+        {configuration && <ProductConfigurator product={product} config={configuration} onChange={changeConfiguration} onEnquire={onEnquire} onAdd={addToProject} />}</div>
         <div className="product-description">
           <p className="product-category-label">{product.category}</p>
           <h3>{product.name}</h3>
@@ -287,6 +310,7 @@ export default function ProductShowroom({ onEnquire }) {
           <button className="text-link" onClick={() => onEnquire(product.name)}>
             Discuss this product <ArrowUpRight size={20} />
           </button>
+          {!configuration && <button className="button button-outline" onClick={() => addToProject(product.id, null)}>Add product to project list</button>}
           <p className="quiet concept-note">
             Representative 3D concepts. Final design, dimensions and equipment
             specifications are reviewed for your project.
@@ -296,6 +320,8 @@ export default function ProductShowroom({ onEnquire }) {
           </p>
         </div>
       </div> : <div className="product-empty"><h3>No matching equipment</h3><p>Try a broader search or choose another category.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("All products"); }}>Show all products</button></div>}
+      <p className="form-status" role="status">{projectStatus}</p>
+      <ProjectList items={projectItems} onChange={setProjectItems} onEdit={editProject} onEnquire={onEnquire} storageAvailable={storageAvailable} />
     </section>
   );
 }

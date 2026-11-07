@@ -1,6 +1,6 @@
 import { normalizeConfiguration, shelfChoices, configurationSummary } from "../lib/product-configuration.mjs";
 
-export default function ProductConfigurator({ product, config, onChange, onEnquire }) {
+export default function ProductConfigurator({ product, config, onChange, onEnquire, onAdd }) {
   const update = (key, value) => onChange(normalizeConfiguration(product.id, { ...config, [key]: value }));
   return <div className="product-configurator">
     <div className="config-heading"><h4>Configure your product</h4><span>Concept preview</span></div>
@@ -10,6 +10,7 @@ export default function ProductConfigurator({ product, config, onChange, onEnqui
     <label>Finish<select aria-label="Configured finish" value={config.finish} onChange={(e) => update("finish", Number(e.target.value))}><option value="0">Brushed steel</option><option value="1">Satin steel</option></select></label>
     <label>Quantity<input aria-label="Configured quantity" type="number" min="1" max="100" value={config.quantity} onChange={(e) => update("quantity", e.target.value)} /></label></div>
     <details className="configuration-summary"><summary>View configuration summary</summary><pre>{configurationSummary(product.name, config)}</pre></details>
+    <button className="button button-outline save-project-button" onClick={() => onAdd(product.id, config)}>Add configuration to project list</button>
     <button className="button button-green" onClick={() => onEnquire(product.name, configurationSummary(product.name, config))}>Use this configuration in my enquiry</button>
     <p className="quiet">Dimensions show a proportional concept, including fittings. Final design and pricing are reviewed by our team.</p>
   </div>;

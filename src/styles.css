@@ -1997,3 +1997,23 @@ html[data-theme="light"] .product-view-tools button[aria-pressed="true"] { color
 .product-configurator > .button { width: 100%; font-size: 12px; white-space: normal; }
 .product-configurator > p:last-child { font-size: 10px; margin-top: 15px; }
 @media(max-width:720px) { .product-configurator { padding: 18px; } .config-options { grid-template-columns: 1fr 1fr; } .config-heading h4 { font-size: 17px; } }
+.save-project-button { margin-bottom: 12px; }
+.project-list-panel { margin-top: 64px; padding: 30px; border: 1px solid var(--rule); background: color-mix(in srgb, var(--accent) 3%, transparent); }
+.project-list-empty { text-align: center; padding: 45px 24px; }
+.project-list-panel h3 { font-size: 30px; font-weight: 500; margin: 8px 0 12px; }
+.project-list-panel > p { color: var(--muted); font-size: 12px; line-height: 1.8; }
+.project-list-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.project-list-heading > span { font-size: 12px; color: var(--muted); }
+.project-comparison { width: 100%; overflow-x: auto; margin: 26px 0; }
+.project-comparison table { border-collapse: collapse; width: 100%; text-align: left; font-size: 12px; line-height: 1.7; }
+.project-comparison caption { text-align: left; color: var(--muted); margin-bottom: 16px; }
+.project-comparison td, .project-comparison th { border-bottom: 1px solid var(--rule); padding: 17px 14px; vertical-align: top; }
+.project-comparison thead th { color: var(--muted); font-weight: 500; white-space: nowrap; }
+.project-comparison th:first-child { min-width: 180px; }
+.project-comparison td:nth-child(2) { white-space: nowrap; }
+.project-comparison input { width: 64px; background: transparent; border: 1px solid var(--rule); padding: 9px; color: var(--text); }
+.project-comparison .text-control { display: block; font-size: 11px; white-space: nowrap; }
+.project-comparison .remove-project-item { color: var(--muted); margin-top: 10px; }
+.project-list-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.project-list-actions .button { font-size: 12px; }
+@media(max-width:720px) { .project-list-panel { padding: 20px 15px; margin-top: 40px; } .project-list-heading { display: block; } .project-list-panel h3 { font-size: 26px; } .project-list-actions .button { width: 100%; white-space: normal; } }
