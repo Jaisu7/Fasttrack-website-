@@ -178,8 +178,9 @@ export default function ManufacturingJourney() {
             <p>{s.copy}</p>
             <div className="hero-actions">
               <a href="#products" className="button button-light">
-                Explore Products <ArrowUpRight size={20} />
+                Explore Our Products <ArrowUpRight size={20} />
               </a>
+              <a href="#enquiry" className="button button-outline">Discuss Your Project <ArrowUpRight size={20} /></a>
             </div>
           </div>
         </div>
