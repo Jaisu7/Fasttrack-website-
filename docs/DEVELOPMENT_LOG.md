@@ -42,3 +42,8 @@ No approved CAD imports, verified technical specs or production backend enquiry 
 
 ## 2026-11-08 — Homepage and capabilities
 Added Explore Our Products and Discuss Your Project homepage actions. Reworked the four process panels with typical applications, material review guidance and process-specific enquiry handoff. Desktop shows visual left/details right; mobile stacks the visual first. Interactive guidance remains available in a disclosure. Product showroom files remain unchanged. No numerical manufacturing claims or automatic enquiry delivery added.
+
+
+## 2026-11-08 — Steel editorial motion refinement
+Reference research: https://www.awwwards.com/sites/q-industrial (home 3D motion and service interactions); https://www.awwwards.com/sites/terminal-industries (scrolling, storytelling, animation). Adapted principles within the established design, without copying assets or adding dependencies.
+Added staggered hero lines, process panel entrances, section reveals, navigation underlines, CTA arrow feedback, a reading progress line and large process typography. Native scrolling and reduced-motion preference are preserved. Product component/model/configuration files remain unchanged. Content stays visible when the motion enhancement is unavailable.
