@@ -34,7 +34,13 @@ const processes = [
       "Move along the emblem to guide the torch. The finished panel exits before the next cycle.",
   },
 ];
-function ProcessScene({ process }) {
+const capabilityDetails = {
+  laser: { applications: "Profiled panels, equipment components and decorative cut-outs.", material: "Tell us the material grade, sheet thickness and required profile." },
+  punching: { applications: "Perforated panels, ventilation openings and repeated hole patterns.", material: "Share the material grade, thickness, hole pattern and quantity." },
+  bending: { applications: "Cabinet panels, folded edges, channels and equipment enclosures.", material: "Share the material grade, thickness, bend dimensions and drawing." },
+  welding: { applications: "Joining fabricated components into equipment, frames and assemblies.", material: "Tell us the material grade, joint details and required surface finish." },
+};
+function ProcessScene({ process, onEnquire }) {
   const canvas = useRef(null),
     root = useRef(null),
     engine = useRef(null),
@@ -103,7 +109,13 @@ function ProcessScene({ process }) {
       <div className="process-copy">
         <h3>{process.title}</h3>
         <p className="process-lead">{process.copy}</p>
-        <div className="process-instructions">
+        <dl className="capability-details">
+          <div><dt>Typical applications</dt><dd>{capabilityDetails[process.id].applications}</dd></div>
+          <div><dt>Material & project review</dt><dd>{capabilityDetails[process.id].material}</dd></div>
+        </dl>
+        <button type="button" className="button button-light capability-enquiry" onClick={() => onEnquire(process.tab)}>Enquire about {process.tab} <ArrowUpRight size={18} /></button>
+        <p className="quiet capability-note">Material suitability and machine capacity are confirmed after drawing review.</p>
+        <details className="process-instructions"><summary>Try the interactive demonstration</summary>
           <p id={`instructions-${process.id}`}>{process.instruction}</p>
           <ol className="production-steps" aria-label="Production cycle">
             {[ ["working", "Working"], ["complete", "Finished"], ["ejecting", "Release"], ["loading", "New sheet"] ].map(([phase, label], i, items) => (
@@ -124,7 +136,7 @@ function ProcessScene({ process }) {
                       ? "Manual tool guidance"
                       : "Finish → release → fresh blank"}
           </p>
-        </div>
+        </details>
       </div>
       <div className="process-media">
         <div
@@ -166,7 +178,7 @@ function ProcessScene({ process }) {
     </div>
   );
 }
-export default function ProcessStudio({ selected, setSelected }) {
+export default function ProcessStudio({ selected, setSelected, onEnquire }) {
   return (
     <section id="studio" tabIndex={-1} className="section process-section">
       <div className="section-heading reveal">
@@ -176,9 +188,9 @@ export default function ProcessStudio({ selected, setSelected }) {
           One standard.
         </h2>
         <p>
-          Move the tool.
+          Explore our fabrication capabilities.
           <br className="desktop-break" />
-          Watch the material respond.
+          Select a process to discuss your requirements.
         </p>
       </div>
       <div
@@ -212,6 +224,7 @@ export default function ProcessStudio({ selected, setSelected }) {
         <ProcessScene
           key={processes[selected].id}
           process={processes[selected]}
+          onEnquire={onEnquire}
         />
       </div>
       <div className="process-ending reveal">Cut. Form. Join. Finish.</div>
