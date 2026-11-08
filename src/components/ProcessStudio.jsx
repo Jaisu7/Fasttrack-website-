@@ -45,10 +45,7 @@ function ProcessScene({ process, onEnquire }) {
     root = useRef(null),
     engine = useRef(null),
     [ready, setReady] = useState(false),
-    [failed, setFailed] = useState(false),
-    [manual, setManual] = useState(false),
-    [reduced, setReduced] = useState(false),
-    [cycle, setCycle] = useState({ phase: "working", index: 0 });
+    [failed, setFailed] = useState(false);
   useEffect(() => {
     let alive = true,
       observer;
@@ -61,10 +58,9 @@ function ProcessScene({ process, onEnquire }) {
         if (!alive) return;
         const callbacks = {
           ready: () => alive && setReady(true),
-          mode: (v) => alive && setManual(v),
-          reduced: (v) => alive && setReduced(v),
+          mode: () => {},
+          reduced: () => {},
           unavailable: () => alive && setFailed(true),
-          cycle: (phase, index) => alive && setCycle({ phase, index }),
         };
         engine.current =
           process.id === "laser"
@@ -115,28 +111,7 @@ function ProcessScene({ process, onEnquire }) {
         </dl>
         <button type="button" className="button button-light capability-enquiry" onClick={() => onEnquire(process.tab)}>Enquire about {process.tab} <ArrowUpRight size={18} /></button>
         <p className="quiet capability-note">Material suitability and machine capacity are confirmed after drawing review.</p>
-        <details className="process-instructions"><summary>Try the interactive demonstration</summary>
-          <p id={`instructions-${process.id}`}>{process.instruction}</p>
-          <ol className="production-steps" aria-label="Production cycle">
-            {[ ["working", "Working"], ["complete", "Finished"], ["ejecting", "Release"], ["loading", "New sheet"] ].map(([phase, label], i, items) => (
-              <li key={phase} className={cycle.phase === phase ? "active" : items.findIndex(([p]) => p === cycle.phase) > i ? "done" : ""} aria-current={cycle.phase === phase ? "step" : undefined}>
-                <span>{String(i + 1).padStart(2, "0")}</span>{label}
-              </li>
-            ))}
-          </ol>
-          <p className="quiet cycle-count">Cycle {cycle.index + 1} · One piece at a time</p>
-          <p className="quiet process-status" aria-live="polite">
-            {failed
-              ? "Still preview"
-              : !ready
-                ? "Loading process..."
-                : reduced
-                  ? "Reduced motion · Finished workpiece"
-                  : manual
-                      ? "Manual tool guidance"
-                      : "Finish → release → fresh blank"}
-          </p>
-        </details>
+        <p className="sr-only" id={`instructions-${process.id}`}>Use arrow keys to guide the manufacturing demonstration.</p>
       </div>
       <div className="process-media">
         <div
