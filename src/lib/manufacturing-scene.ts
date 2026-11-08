@@ -877,7 +877,7 @@ export function createManufacturingScene(
         (1 - state.doors) * 0.45,
         0.725 + (1 - state.doors) * 1.8,
       );
-      root.rotation.y = sign * (1 - state.doors) * 0.7;
+      root.rotation.y = sign * ((1 - state.doors) * 0.7 + state.doorOpen * 1.1);
     }
     let remaining = state.weld * weldLength;
     for (const bead of beads) {
