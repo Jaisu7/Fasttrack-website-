@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
+import SiteMotion from "./components/SiteMotion";
 import Header from "./components/Header";
 import ManufacturingJourney from "./components/ManufacturingJourney";
 import ProcessStudio from "./components/ProcessStudio";
@@ -10,26 +11,6 @@ export default function App() {
   const [process, setProcess] = useState(0),
     [requirement, setRequirement] = useState(""),
     [configurationDetails, setConfigurationDetails] = useState("");
-  useEffect(() => {
-    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (preference.matches) return;
-    const elements = document.querySelectorAll(".reveal");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries)
-          if (entry.isIntersecting) {
-            entry.target.classList.add("revealed");
-            observer.unobserve(entry.target);
-          }
-      },
-      { threshold: 0.1 },
-    );
-    elements.forEach((el) => {
-      el.classList.add("reveal-pending");
-      observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
   function enquire(name, summary = "") {
     setConfigurationDetails(summary);
     setRequirement(name);
@@ -44,6 +25,7 @@ export default function App() {
   return (
     <>
       <Header />
+      <SiteMotion />
       <main id="home">
         <ManufacturingJourney />
         <ProcessStudio selected={process} setSelected={setProcess} onEnquire={enquire} />
