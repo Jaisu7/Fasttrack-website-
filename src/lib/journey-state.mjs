@@ -62,5 +62,6 @@ export function manufacturingState(value) {
     upright: smoothRange(sceneProgress, 0.652, 0.683),
     assembly: smoothRange(sceneProgress, 0.658, 0.725),
     doors: smoothRange(sceneProgress, 0.788, 0.895),
+    doorOpen: smoothRange(sceneProgress, 0.91, 0.97),
   };
 }
