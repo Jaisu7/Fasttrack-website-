@@ -2017,3 +2017,26 @@ html[data-theme="light"] .product-view-tools button[aria-pressed="true"] { color
 .project-list-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
 .project-list-actions .button { font-size: 12px; }
 @media(max-width:720px) { .project-list-panel { padding: 20px 15px; margin-top: 40px; } .project-list-heading { display: block; } .project-list-panel h3 { font-size: 26px; } .project-list-actions .button { width: 100%; white-space: normal; } }
+
+/* Customer-facing manufacturing capabilities */
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.process-layout { grid-template-columns: minmax(0, 1.65fr) minmax(280px, 1fr); align-items: start; }
+.process-media { grid-column: 1; grid-row: 1; }
+.process-copy { grid-column: 2; grid-row: 1; }
+.process-lead { max-width: none; min-height: 0; }
+.capability-details { margin: 24px 0; }
+.capability-details > div { border-top: 1px solid #5b6863; padding: 16px 0; }
+.capability-details dt { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 8px; color: #bac5be; }
+.capability-details dd { margin: 0; line-height: 1.65; }
+.capability-enquiry { white-space: normal; text-align: left; }
+.capability-note { margin-top: 14px; line-height: 1.6; }
+.process-instructions { max-width: none; padding-top: 16px; margin-top: 20px; }
+.process-instructions summary { cursor: pointer; padding: 8px 0; }
+.process-instructions[open] summary { margin-bottom: 12px; }
+@media (max-width: 900px) {
+ .process-layout { display: flex; flex-direction: column; }
+ .process-media { width: 100%; order: -1; }
+ .process-copy { display: block; width: 100%; }
+ .process-copy .process-lead { margin-top: 16px; }
+ .hero-actions .button { min-height: 48px; }
+}
