@@ -807,13 +807,17 @@ export function createManufacturingScene(
     pointerY += (targetY - pointerY) * easing;
     const stageMoving = !paused && !reduced;
     if (stageMoving) elapsed += dt;
-    if (state.stageIndex === 4 && stageMoving) showroomTime += dt;
-    else if (state.stageIndex !== 4) showroomTime = 0;
+    // Rotate the complete assembly only after welding and door installation finish.
+    const assembled = state.weld >= 1 && state.doors >= 1;
+    if (state.stageIndex === 4 && assembled && stageMoving)
+      showroomTime += dt * smoothRange(state.finish, 0.35, 0.65);
+    else if (state.stageIndex !== 4 || !assembled) showroomTime = 0;
     product.position.x = (1 - smoothRange(state.raw, 0, 1)) * 0.5;
     plinth.visible = sceneProgress < 0.115;
     plinth.position.y = 0.47 - smoothRange(sceneProgress, 0.065, 0.115) * 1.1;
     product.rotation.y =
-      smoothRange(state.finish, 0.05, 1) * (-0.22 + Math.sin(showroomTime * 0.2) * 0.26);
+      smoothRange(state.finish, 0.05, 1) * -0.22 +
+      (reduced ? 0 : showroomTime * 0.24);
     primaryRig.rotation.x = (state.upright * Math.PI) / 2;
     replacePrimary(0);
     foldPrimary(state.foldLeft, state.foldRight);
