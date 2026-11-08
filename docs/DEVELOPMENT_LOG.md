@@ -55,3 +55,7 @@ Replaced the small side-to-side showroom sway with continuous full rotation of t
 
 ## 2026-11-08 — Dark/light contrast correction
 Confirmed on the live site that light-theme action buttons inherited a dark background while retaining dark text. Introduced paired button foreground/background/hover tokens, with separate dark hero tokens. Corrected the enquiry arrow colour, native dropdown options, process status/disclosure colours, draft surfaces and workshop menu states. Body now explicitly uses theme foreground/background; corrected footer copyright encoding. Product functionality is unchanged.
+
+
+## 2026-11-08 — Clean process panels and open finished cabinet
+Removed the visible demo instruction disclosure, cycle counter, production steps and technical status text; retained a concise screen-reader keyboard hint. Finished cabinet doors open outward to approximately 63 degrees after welding and installation complete, exposing the shelf while the assembly rotates. Reduced motion shows the finished open pose.
