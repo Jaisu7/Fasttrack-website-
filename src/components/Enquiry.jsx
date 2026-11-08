@@ -208,7 +208,7 @@ export default function Enquiry({ requirement, setRequirement, configurationDeta
           <a href="#enquiry">Contact</a>
         </nav>
         <small>
-          Â© {new Date().getFullYear()} Fastrack Metallic. All rights reserved.
+          © {new Date().getFullYear()} Fastrack Metallic. All rights reserved.
         </small>
       </footer>
     </>
