@@ -2040,3 +2040,50 @@ html[data-theme="light"] .product-view-tools button[aria-pressed="true"] { color
  .process-copy .process-lead { margin-top: 16px; }
  .hero-actions .button { min-height: 48px; }
 }
+
+/* Steel editorial motion: native scrolling, restrained emerald accents. */
+:root { --motion-ease: cubic-bezier(.16, 1, .3, 1); }
+.reading-progress { position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 3px; background: var(--accent); transform: scaleX(var(--read-progress, 0)); transform-origin: left; pointer-events: none; }
+.site-header { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.nav a { position: relative; }
+.nav a::after { content: ""; position: absolute; left: 0; bottom: -8px; height: 1px; width: 100%; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--motion-ease); }
+.nav a:hover::after, .nav a:focus-visible::after { transform: scaleX(1); }
+.hero-title em { color: #a8e6c9; }
+.journey-text { animation: steel-stage-in .85s var(--motion-ease) both; }
+.hero-title > span { animation: steel-line-in 1s var(--motion-ease) both; }
+.hero-title > span:nth-child(2) { animation-delay: .08s; }
+.hero-title > span:nth-child(3) { animation-delay: .16s; }
+.hero-title > span:nth-child(4) { animation-delay: .24s; }
+.journey-text > p:not(.journey-stage-label), .hero-actions { animation: steel-stage-in 1s .18s var(--motion-ease) both; }
+.hero-actions { animation-delay: .3s; }
+.button { position: relative; overflow: hidden; transition: background .3s, color .3s, border-color .3s, transform .4s var(--motion-ease), box-shadow .4s; }
+.button svg { transition: transform .4s var(--motion-ease); }
+.button:hover:not(:disabled) svg { transform: translate(3px, -3px); }
+.hero-actions .button-light:hover, .capability-enquiry:hover { box-shadow: 0 8px 32px #52d39b20; }
+.hero-actions .button-outline:hover { border-color: var(--accent); background: #52d39b0d; }
+.process-section { position: relative; }
+.process-section::before { content: ""; display: block; height: 1px; position: absolute; top: 0; left: var(--gutter); right: var(--gutter); background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: .55; }
+.section-heading h2 { letter-spacing: -.055em; text-wrap: balance; }
+.tab-rail button { position: relative; transition: color .25s, background .35s; }
+.tab-rail button::before { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .5s var(--motion-ease); }
+.tab-rail button[aria-selected="true"]::before { transform: scaleX(1); }
+.tab-rail button:hover { background: #52d39b08; }
+.process-layout .process-copy { animation: steel-stage-in .6s var(--motion-ease) both; }
+.process-layout .process-media { animation: steel-media-in .8s var(--motion-ease) both; }
+.process-media { border: 1px solid var(--rule); padding: 8px; background: linear-gradient(140deg, #ffffff07, transparent 60%); }
+.capability-details > div { border-color: var(--rule); }
+.capability-details dt { color: var(--accent); font-size: 10px; letter-spacing: .14em; }
+.process-ending { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; padding: 34px 0; font-size: clamp(36px, 6.3vw, 100px); line-height: 1.12; font-weight: 500; letter-spacing: -.065em; color: var(--text); border-color: var(--rule); }
+.process-ending span:nth-child(even) { color: var(--muted); }
+.about-line { padding-top: 48px; padding-bottom: 48px; border-bottom: 1px solid var(--rule); }
+.about-line > p { font-size: clamp(19px, 2vw, 29px); line-height: 1.65; letter-spacing: -.025em; max-width: 900px; }
+.about-line .text-link { color: var(--accent); }
+.enquiry-section { position: relative; border-top: 1px solid var(--rule); }
+.enquiry-intro h2 { letter-spacing: -.06em; }
+.enquiry-form input:not([type="checkbox"]), .enquiry-form select, .enquiry-form textarea { transition: border-color .3s, background .3s; }
+.enquiry-form input:focus, .enquiry-form select:focus, .enquiry-form textarea:focus { border-color: var(--accent); }
+@keyframes steel-line-in { from { opacity: 0; transform: translateY(30px); clip-path: inset(0 0 100% 0); } to { opacity: 1; transform: none; clip-path: inset(0); } }
+@keyframes steel-stage-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes steel-media-in { from { opacity: .25; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+@media (max-width: 720px) { .process-ending { font-size: clamp(30px, 8.5vw, 58px); gap: 8px; padding: 28px 0; } .about-line > p { font-size: 20px; } .process-media { padding: 5px; } }
+@media (prefers-reduced-motion: reduce) { .journey-text, .hero-title > span, .hero-actions, .journey-text > p, .process-layout .process-copy, .process-layout .process-media { animation: none !important; } .reading-progress { display: none; } }
