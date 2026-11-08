@@ -46,7 +46,7 @@ export default function App() {
       <Header />
       <main id="home">
         <ManufacturingJourney />
-        <ProcessStudio selected={process} setSelected={setProcess} />
+        <ProcessStudio selected={process} setSelected={setProcess} onEnquire={enquire} />
         <div id="about" className="about-line section">
           <p>
             Fastrack Metallic brings stainless-steel fabrication, commercial
