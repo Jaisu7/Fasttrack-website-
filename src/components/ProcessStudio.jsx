@@ -227,7 +227,7 @@ export default function ProcessStudio({ selected, setSelected, onEnquire }) {
           onEnquire={onEnquire}
         />
       </div>
-      <div className="process-ending reveal">Cut. Form. Join. Finish.</div>
+      <div className="process-ending reveal" aria-label="Cut. Form. Join. Finish.">{["Cut.", "Form.", "Join.", "Finish."].map((word) => <span key={word} aria-hidden="true">{word}</span>)}</div>
     </section>
   );
 }
