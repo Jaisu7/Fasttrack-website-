@@ -126,6 +126,10 @@ export default function Enquiry({ requirement, setRequirement, configurationDeta
                 <option value="">Select a requirement</option>
                 {[
                   ...products.map((product) => product.name),
+                  "Laser cutting",
+                  "CNC punching",
+                  "Bending",
+                  "Welding",
                   "Laser / punching / bending / welding",
                   "Multiple equipment / project list",
                   "Other project",
