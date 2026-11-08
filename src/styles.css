@@ -40,6 +40,11 @@
   --rule: #34413f;
   --green: #16794e;
   --accent: #52d39b;
+  --button-bg: #f1f3ef;
+  --button-text: #101619;
+  --button-hover: #ffffff;
+  --hover-surface: #172824;
+  --surface: #15211c;
   --gutter: clamp(24px, 3.125vw, 64px);
   color-scheme: dark;
 }
@@ -52,6 +57,11 @@ html[data-theme="light"] {
   --muted: #52645a;
   --rule: #c6cfc5;
   --accent: #08744e;
+  --button-bg: #163b2a;
+  --button-text: #ffffff;
+  --button-hover: #0b5134;
+  --hover-surface: #dce8db;
+  --surface: #e4eade;
 }
 * {
   box-sizing: border-box;
@@ -61,6 +71,8 @@ html {
   scroll-padding-top: 110px;
 }
 body {
+  background: var(--bg);
+  color: var(--text);
   margin: 0;
 }
 button,
@@ -168,11 +180,11 @@ pre:focus-visible {
   background: #1c8c5d;
 }
 .button-light {
-  background: var(--text);
-  color: #101619;
+  background: var(--button-bg);
+  color: var(--button-text);
 }
 .button-light:hover {
-  background: #fff;
+  background: var(--button-hover);
 }
 .button-outline {
   border-color: #6c7976;
@@ -180,7 +192,7 @@ pre:focus-visible {
 }
 .button-outline:hover:not(:disabled) {
   border-color: var(--accent);
-  background: #172824;
+  background: var(--hover-surface);
 }
 .button[aria-pressed="true"] {
   border-color: var(--accent);
@@ -942,7 +954,7 @@ pre:focus-visible {
   font-size: 17px;
 }
 .prepare-button svg {
-  color: var(--green);
+  color: currentColor;
 }
 .form-note {
   margin-top: 17px;
@@ -1933,7 +1945,7 @@ html[data-theme="light"] .journey-note,
 html[data-theme="light"] .cycle-count,
 html[data-theme="light"] .production-steps li { color: #52645a; }
 html[data-theme="light"] .product-list button[aria-pressed="true"] { background: #dce8db; color: #123b29; }
-html[data-theme="light"] .button-outline:hover { background: #dce8db; }
+html[data-theme="light"] .button-outline:hover { background: var(--hover-surface); }
 html[data-theme="light"] .enquiry-form input,
 html[data-theme="light"] .enquiry-form select,
 html[data-theme="light"] .enquiry-form textarea { color: #162b23; }
@@ -1944,7 +1956,7 @@ html[data-theme="light"] .production-steps li.active { color: #075f3c; border-co
 html[data-theme="light"] .workshop-menu { background: #e7ede2; color: #163b27; }
 html[data-theme="light"] .workshop-menu p { color: #52645a; }
 /* The cinematic opening keeps its own dark stage in both page themes. */
-html[data-theme="light"] .journey-pin { --bg: #101619; --text: #f1f3ef; --accent: #52d39b; color: #f1f3ef; }
+html[data-theme="light"] .journey-pin { --bg: #101619; --text: #f1f3ef; --accent: #52d39b; --button-bg: #f1f3ef; --button-text: #101619; --button-hover: #fff; --hover-surface: #172824; color: #f1f3ef; color-scheme: dark; }
 @media (max-width: 900px) { .theme-toggle span { display: none; } .theme-toggle { width: 38px; height: 38px; min-height: 38px; padding: 8px; } .header-inner { gap: 12px; } }
 @media (max-width: 720px) { .header-quote { font-size: 10px; padding: 9px; } .header-quote svg { display: none; } .brand > span { font-size: 20px; } }
 html[data-theme="light"] .draft-review pre { background: #e4eade; color: #162b23; }
@@ -2087,3 +2099,17 @@ html[data-theme="light"] .product-view-tools button[aria-pressed="true"] { color
 @keyframes steel-media-in { from { opacity: .25; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
 @media (max-width: 720px) { .process-ending { font-size: clamp(30px, 8.5vw, 58px); gap: 8px; padding: 28px 0; } .about-line > p { font-size: 20px; } .process-media { padding: 5px; } }
 @media (prefers-reduced-motion: reduce) { .journey-text, .hero-title > span, .hero-actions, .journey-text > p, .process-layout .process-copy, .process-layout .process-media { animation: none !important; } .reading-progress { display: none; } }
+
+/* Theme contrast: native fields, disclosures and persistent dark media surfaces. */
+input, select, textarea, option { color: var(--text); caret-color: var(--text); }
+select option { background: var(--bg); color: var(--text); }
+.process-status, .cycle-count, .process-demo-mode, .media-caption { color: var(--muted); }
+.process-instructions { color: var(--text); }
+.production-steps li { color: var(--muted); border-color: var(--rule); }
+.production-steps li.active, .production-steps li.done { color: var(--accent); border-color: var(--accent); }
+html[data-theme="light"] .production-steps li.done { color: #08744e; border-color: #08744e; }
+.draft-review pre { background: var(--surface); color: var(--text); }
+.workshop-trigger { color: #e9f2e9; }
+html[data-theme="light"] .workshop-menu button, html[data-theme="light"] .workshop-menu a { color: #163b27; }
+html[data-theme="light"] .workshop-menu button:hover, html[data-theme="light"] .workshop-menu a:hover { color: #075f3c; }
+html[data-theme="light"] .journey-pin .button-outline:hover { background: var(--hover-surface); color: var(--text); }
