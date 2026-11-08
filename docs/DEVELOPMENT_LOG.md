@@ -51,3 +51,7 @@ Added staggered hero lines, process panel entrances, section reveals, navigation
 
 ## 2026-11-08 — Finished assembly turntable
 Replaced the small side-to-side showroom sway with continuous full rotation of the assembled unit. Rotation begins after welding and door installation complete, accelerates gently with the finished reveal, and respects pause, offscreen suspension, reset and reduced motion. At full reveal one revolution takes approximately 26 seconds.
+
+
+## 2026-11-08 — Dark/light contrast correction
+Confirmed on the live site that light-theme action buttons inherited a dark background while retaining dark text. Introduced paired button foreground/background/hover tokens, with separate dark hero tokens. Corrected the enquiry arrow colour, native dropdown options, process status/disclosure colours, draft surfaces and workshop menu states. Body now explicitly uses theme foreground/background; corrected footer copyright encoding. Product functionality is unchanged.
