@@ -47,3 +47,7 @@ Added Explore Our Products and Discuss Your Project homepage actions. Reworked t
 ## 2026-11-08 — Steel editorial motion refinement
 Reference research: https://www.awwwards.com/sites/q-industrial (home 3D motion and service interactions); https://www.awwwards.com/sites/terminal-industries (scrolling, storytelling, animation). Adapted principles within the established design, without copying assets or adding dependencies.
 Added staggered hero lines, process panel entrances, section reveals, navigation underlines, CTA arrow feedback, a reading progress line and large process typography. Native scrolling and reduced-motion preference are preserved. Product component/model/configuration files remain unchanged. Content stays visible when the motion enhancement is unavailable.
+
+
+## 2026-11-08 — Finished assembly turntable
+Replaced the small side-to-side showroom sway with continuous full rotation of the assembled unit. Rotation begins after welding and door installation complete, accelerates gently with the finished reveal, and respects pause, offscreen suspension, reset and reduced motion. At full reveal one revolution takes approximately 26 seconds.
