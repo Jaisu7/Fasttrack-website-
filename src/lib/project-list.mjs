@@ -1,5 +1,10 @@
 import { normalizeConfiguration, configurationSummary } from "./product-configuration.mjs";
 export const PROJECT_STORAGE_KEY = "fastrack-project-v1";
+let itemSequence = 0;
+// These identify browser-local list rows, not accounts or security tokens.
+export function createProjectItemId(cryptoApi = globalThis.crypto) {
+  return cryptoApi?.randomUUID?.() ?? `project-${Date.now().toString(36)}-${++itemSequence}-${Math.random().toString(36).slice(2)}`;
+}
 export function readProject(raw, catalog) {
   try {
     const data = JSON.parse(raw);

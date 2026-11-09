@@ -1,0 +1,26 @@
+/* A centred logo over the actual blurred page, with no panel or popup box. */
+.page-loading-layer { position: fixed; inset: 0; z-index: 2100; display: grid; place-items: center; padding: 24px; background: #08170f52; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); outline: none; transition: opacity .35s ease, backdrop-filter .35s ease, -webkit-backdrop-filter .35s ease; }
+.page-loading-layer.is-leaving { opacity: 0; -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); }
+.brand-reveal { position: relative; width: min(260px, 62vw); pointer-events: none; color: #e0eade; text-align: center; }
+.brand-forged-mark { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 12px 20px #06171060); }
+.brand-forged-band { animation: brand-band-assembly .85s cubic-bezier(.2,.7,.2,1) var(--band-delay) both; }
+.brand-forged-shine { animation: brand-metal-sweep 2.2s ease-in-out .55s infinite; mix-blend-mode: screen; }
+.brand-reveal-wordmark { margin-top: 6px; font-size: 13px; font-weight: 600; letter-spacing: .18em; line-height: 1.6; animation: brand-wordmark-in .7s ease .35s both; }
+.brand-reveal-wordmark span { margin-left: .3em; font-weight: 400; color: #9db39f; }
+.brand-reveal-rule { display: block; height: 2px; width: 82px; margin: 19px auto 0; background: #d4e8cf25; overflow: hidden; }
+.brand-reveal-rule > i { display: block; width: 100%; height: 100%; background: #b7d9b4; transform-origin: left; transition: transform .3s ease; }
+.intro-replay { min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--muted); font: inherit; text-align: left; cursor: pointer; white-space: nowrap; }
+.intro-replay:hover { color: var(--accent); }
+.intro-replay:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+@keyframes brand-band-assembly { from { opacity: 0; transform: translateX(var(--band-offset)); } to { opacity: 1; transform: translateX(0); } }
+@keyframes brand-metal-sweep { 0%, 8% { translate: 0 0; opacity: 0; } 18% { opacity: .8; } 75%, 100% { translate: 800px 0; opacity: 0; } }
+@keyframes brand-wordmark-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 720px) {
+  .brand-reveal-wordmark { font-size: 11px; letter-spacing: .13em; }
+  .brand-reveal-rule { margin-top: 16px; }
+}
+@media (max-height: 400px) { .brand-reveal { width: 175px; } }
+@media (prefers-reduced-motion: reduce) {
+  .page-loading-layer, .brand-reveal, .brand-reveal * { animation: none !important; transition: none !important; }
+  .brand-forged-shine { display: none; }
+}

@@ -37,7 +37,7 @@ export const products: Product[] = [
     id: "refrigerator",
     name: "Upright refrigerators",
     category: "Display & refrigeration",
-    image: "/images/project-11.png",
+    image: "/images/project-11.webp",
     description: "Cold storage around your kitchen workflow.",
     detail: "Explore a representative upright refrigerator with opening doors and internal shelves. Capacity, cooling performance, dimensions and equipment specification must be confirmed for your project.",
     options: ["Upright cold storage", "Internal shelving", "Cooling requirements reviewed per project"],
@@ -48,7 +48,7 @@ export const products: Product[] = [
     id: "hot-cabinet",
     name: "Hot holding cabinets",
     category: "Kitchen equipment",
-    image: "/images/project-11.png",
+    image: "/images/project-11.webp",
     description: "A considered place for prepared food.",
     detail: "A hot holding cabinet concept with a glazed door and tray positions. Share your foodservice workflow so temperature requirements, controls and final equipment specification can be reviewed.",
     options: ["Food holding cabinet layouts", "Tray arrangements", "Operating requirements reviewed per project"],
@@ -102,7 +102,7 @@ export const products: Product[] = [
     id: "rack",
     name: "Freestanding storage racks",
     category: "Storage",
-    image: "/images/storage.jpg",
+    image: "/images/storage.webp",
     description: "Make better use of every square metre.",
     detail:
       "Freestanding multi-tier rack concepts for back-of-house storage. Discuss available space, stored items and access with the team; loading and final construction require project review.",
@@ -117,7 +117,7 @@ export const products: Product[] = [
     id: "shelves",
     name: "Wall-mounted shelves",
     category: "Storage",
-    image: "/images/storage.jpg",
+    image: "/images/storage.webp",
     description: "Useful storage above your working surface.",
     detail: "Wall-mounted stainless-steel shelf concepts with support brackets. Wall construction, fixings, usable clearance and loading must be assessed before installation.",
     options: ["Wall shelf layouts", "Support brackets", "Fixings and loading reviewed for installation"],
@@ -127,7 +127,7 @@ export const products: Product[] = [
     id: "produce-shelf",
     name: "Fruit & vegetable shelves",
     category: "Storage",
-    image: "/images/storage.jpg",
+    image: "/images/storage.webp",
     description: "Open, organised produce presentation.",
     detail: "A stepped fruit and vegetable display concept with separate produce bins. Shelf arrangement, cleaning access and the final retail layout are developed for your project.",
     options: ["Tiered produce bins", "Open retail presentation", "Project-specific shelf layouts"],
@@ -137,7 +137,7 @@ export const products: Product[] = [
     id: "cabinets",
     name: "Cabinets & counters",
     category: "Storage",
-    image: "/images/project-11.png",
+    image: "/images/project-11.webp",
     description: "A place for everything. A finish that lasts.",
     detail:
       "Stainless steel cabinets and fitted counters bring work surfaces and enclosed storage into one considered layout. Use your drawings or site measurements as the starting point for a quotation.",
@@ -153,7 +153,7 @@ export const products: Product[] = [
     id: "custom",
     name: "Custom retail fabrication",
     category: "Custom fabrication",
-    image: "/images/project-13.png",
+    image: "/images/project-13.webp",
     description: "Built around your vision and your space.",
     detail:
       "Custom fabricated counters, displays and sheet metal components for retail and commercial projects. Share a sketch, technical drawing or reference image to start the conversation.",
@@ -179,20 +179,20 @@ export const processes = [
     short: "Repeatable patterns. Purposeful details.",
     description:
       "Holes, openings and repeated patterns prepared for your component requirements.",
-    image: "/images/punching.jpg",
+    image: "/images/punching.webp",
   },
   {
     title: "Precision bending",
     short: "Flat sheet. Thoughtful form.",
     description:
       "Controlled bends turn sheet metal into the forms your project needs.",
-    image: "/images/bending.jpg",
+    image: "/images/bending.webp",
   },
   {
     title: "Welding & finishing",
     short: "Strong connections. Considered finishes.",
     description:
       "Welded components and finished details bring the fabrication together.",
-    image: "/images/welding.jpg",
+    image: "/images/welding.webp",
   },
 ];

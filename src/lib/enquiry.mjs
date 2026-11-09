@@ -1,3 +1,4 @@
+import { company as contact } from "./site-info.mjs";
 export function prepareEnquiry(fields) {
   const clean = (key) => String(fields[key] || "").trim();
   const name = clean("name"),
@@ -10,6 +11,6 @@ export function prepareEnquiry(fields) {
   return {
     subject,
     body,
-    mailto: `mailto:info@fasttrackmi.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+    mailto: `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
   };
 }

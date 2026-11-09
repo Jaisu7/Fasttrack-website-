@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
+import DeferredImage from "./DeferredImage";
 const processes = [
   {
     id: "laser",
@@ -124,11 +125,11 @@ function ProcessScene({ process, onEnquire }) {
           onPointerLeave={() => engine.current?.leave()}
           onPointerUp={(e) => { if (e.pointerType === "touch") engine.current?.leave(); }}
         >
-          <img
+          <DeferredImage
             className={ready && !failed ? "hidden" : ""}
             src={
               process.id === "bending"
-                ? "/images/bending.jpg"
+                ? "/images/bending.webp"
                 : "/images/laser-bed.webp"
             }
             alt="Illustrative manufacturing scene"

@@ -9,6 +9,7 @@ import {
 } from "./brand-paths";
 import { workpieceCycle, punchStroke } from "./workpiece-cycle.mjs";
 import { drawWorkpieceBed } from "./workpiece-bed";
+import { readRenderQuality, frameIsDue } from "./render-quality.mjs";
 
 export type FabricationProcess = "punching" | "bending" | "welding";
 type Callbacks = {
@@ -51,6 +52,7 @@ export function createProcessAnimation(
     };
   }
   const ctx = context;
+  let quality = readRenderQuality();
   const root = canvas.parentElement!;
   const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
   const bed = new Image(),
@@ -126,6 +128,7 @@ export function createProcessAnimation(
       lastTime = 0;
       return;
     }
+    if (!frameIsDue(time, lastTime, quality.maxFps)) { wake(); return; }
     const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.04) : 1 / 60;
     lastTime = time;
     if (process !== "welding" || manualUntil <= time || piecePhase !== "working") elapsed += dt;
@@ -134,7 +137,10 @@ export function createProcessAnimation(
   }
   function resize() {
     const rect = root.getBoundingClientRect();
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    quality = readRenderQuality();
+    const ratio = quality.pixelRatio;
+    canvas.dataset.renderQuality = quality.mode;
+    canvas.dataset.maxFps = String(quality.maxFps);
     canvas.width = Math.max(1, Math.round(rect.width * ratio));
     canvas.height = Math.max(1, Math.round(rect.height * ratio));
     viewHeight = (Math.max(1, rect.height) / Math.max(1, rect.width)) * 1000;

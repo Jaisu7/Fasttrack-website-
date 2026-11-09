@@ -6,11 +6,13 @@ import {
   Copy,
   Download,
   ExternalLink,
+  MapPin,
 } from "lucide-react";
 import { prepareEnquiry } from "../lib/enquiry.mjs";
 import Brand from "./Brand";
 import { products } from "../lib/fasttrack-data";
-export default function Enquiry({ requirement, setRequirement, configurationDetails = "" }) {
+import { company } from "../lib/site-info.mjs";
+export default function Enquiry({ requirement, setRequirement, configurationDetails = "", onReplayIntro }) {
   const [draft, setDraft] = useState(null),
     [status, setStatus] = useState(""),
     [details, setDetails] = useState(configurationDetails);
@@ -61,13 +63,17 @@ export default function Enquiry({ requirement, setRequirement, configurationDeta
             We’ll help shape the next step.
           </p>
           <div className="contact-links">
-            <a href="mailto:info@fasttrackmi.com">
+            <a href={`mailto:${company.email}`}>
               <Mail size={24} />
-              info@fasttrackmi.com
+              {company.email}
             </a>
-            <a href="tel:+97165351536">
+            <a href={`tel:${company.telephone}`}>
               <Phone size={24} />
-              +971 6 535 1536
+              {company.telephoneLabel}
+            </a>
+            <a className="contact-location" href={company.mapsUrl} target="_blank" rel="noopener noreferrer" aria-label="Find Fastrack Metallic in Sharjah on Google Maps (opens in a new tab)">
+              <MapPin size={24} />
+              <span>{company.location}<small>Find us on Google Maps ↗</small></span>
             </a>
           </div>
         </div>
@@ -206,6 +212,7 @@ export default function Enquiry({ requirement, setRequirement, configurationDeta
           <a href="#manufacturing">Manufacturing</a>
           <a href="#products">Products</a>
           <a href="#enquiry">Contact</a>
+          <button className="intro-replay" type="button" onClick={onReplayIntro}>Replay opening ↗</button>
         </nav>
         <small>
           © {new Date().getFullYear()} Fastrack Metallic. All rights reserved.

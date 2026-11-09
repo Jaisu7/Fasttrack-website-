@@ -7,6 +7,7 @@ import {
 } from "./brand-paths";
 import { workpieceCycle } from "./workpiece-cycle.mjs";
 import { drawWorkpieceBed } from "./workpiece-bed";
+import { readRenderQuality, frameIsDue } from "./render-quality.mjs";
 export type Point = { x: number; y: number };
 type Spark = Point & {
   vx: number;
@@ -69,6 +70,7 @@ export function createLaserAnimation(
     };
   }
   const ctx = context;
+  let quality = readRenderQuality();
   const root = canvas.parentElement!;
   const bed = new Image(),
     head = new Image();
@@ -117,7 +119,10 @@ export function createLaserAnimation(
     const rect = root.getBoundingClientRect();
     width = Math.max(1, rect.width);
     height = Math.max(1, rect.height);
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    quality = readRenderQuality();
+    const pixelRatio = quality.pixelRatio;
+    canvas.dataset.renderQuality = quality.mode;
+    canvas.dataset.maxFps = String(quality.maxFps);
     canvas.width = Math.round(width * pixelRatio);
     canvas.height = Math.round(height * pixelRatio);
     viewHeight = (height / width) * 1000;
@@ -146,6 +151,7 @@ export function createLaserAnimation(
       lastTime = 0;
       return;
     }
+    if (!frameIsDue(time, lastTime, quality.maxFps)) { wake(); return; }
     const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.04) : 1 / 60;
     lastTime = time;
     draw(time, dt);

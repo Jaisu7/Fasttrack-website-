@@ -1,5 +1,5 @@
 import "../styles/product-showroom.css";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   RotateCw,
@@ -15,11 +15,12 @@ import {
   ChevronRight,
   FolderOpen,
 } from "lucide-react";
-import ProjectList from "./ProjectList";
-import { PROJECT_STORAGE_KEY, addProjectItem, readProject } from "../lib/project-list.mjs";
+import { PROJECT_STORAGE_KEY, addProjectItem, readProject, createProjectItemId } from "../lib/project-list.mjs";
 import ProductConfigurator from "./ProductConfigurator";
 import { normalizeConfiguration, supportsConfiguration, configurationSummary } from "../lib/product-configuration.mjs";
 import { products, categories } from "../lib/fasttrack-data";
+import DeferredImage from "./DeferredImage";
+const ProjectList = lazy(() => import("./ProjectList"));
 function ProductViewer({ product, configuration, onFinish, onAdd, onEnquire, children }) {
   const canvas = useRef(null),
     root = useRef(null),
@@ -98,7 +99,7 @@ function ProductViewer({ product, configuration, onFinish, onAdd, onEnquire, chi
   return (
     <div ref={root} className="product-experience">
       <div className="product-stage">
-        <img src={product.image} alt={`Illustrative ${product.name.toLowerCase()}`} loading="lazy" className={ready && !failed ? "hidden" : ""} />
+        <DeferredImage src={product.image} alt={`Illustrative ${product.name.toLowerCase()}`} className={ready && !failed ? "hidden" : ""} />
         <canvas ref={canvas} tabIndex={failed ? -1 : 0} className={failed ? "unavailable" : ""} aria-label={`360 degree ${product.name} concept. Drag or use arrow keys to rotate.`} onKeyDown={(event) => {
           const direction = { ArrowLeft: [-0.12, 0], ArrowRight: [0.12, 0], ArrowUp: [0, -0.08], ArrowDown: [0, 0.08] }[event.key];
           if (direction) { event.preventDefault(); engine.current?.rotate(...direction); }
@@ -149,7 +150,7 @@ export default function ProductShowroom({ onEnquire }) {
     return () => { observer.disconnect(); document.body.classList.remove("in-product-showroom"); };
   }, []);
   function addToProject(productId, config) {
-    const next = addProjectItem(projectItems, productId, config, crypto.randomUUID());
+    const next = addProjectItem(projectItems, productId, config, createProjectItemId());
     if (next === projectItems) { setProjectStatus("Your list has 30 configurations. Remove an item before adding another."); return; }
     setProjectItems(next); setProjectOpen(true); setProjectStatus("Added to your project list below. Matching configurations are combined.");
   }
@@ -188,10 +189,10 @@ export default function ProductShowroom({ onEnquire }) {
           {projectStatus && <p className="product-save-status" role="status">{projectStatus} <a href="#project-list" onClick={() => setProjectOpen(true)}>View list ↗</a></p>}
         </ProductViewer>
         <div className="product-gallery-wrap"><div className="product-gallery-heading"><span>Explore the collection</span><div><button aria-label="Previous products" onClick={() => gallery.current?.scrollBy({ left: -450, behavior: reducedMotion() })}><ChevronLeft size={18} /></button><button aria-label="Next products" onClick={() => gallery.current?.scrollBy({ left: 450, behavior: reducedMotion() })}><ChevronRight size={18} /></button></div></div>
-          <div ref={gallery} className="product-list product-gallery" aria-label="Product families">{galleryProducts.map((p) => <button key={p.id} onClick={() => { setSelected(p.id); setProjectStatus(""); const stage = document.querySelector("#products .product-stage"); if (stage && stage.getBoundingClientRect().top < 90) stage.scrollIntoView({ behavior: reducedMotion(), block: "start" }); }} aria-pressed={product.id === p.id} aria-label={p.name}><img src={`/images/product-previews/${p.id}.jpg`} alt="" loading="lazy" width="220" height="140" /><span>{labels[p.id] || p.name}</span></button>)}</div>
+          <div ref={gallery} className="product-list product-gallery" aria-label="Product families">{galleryProducts.map((p) => <button key={p.id} onClick={() => { setSelected(p.id); setProjectStatus(""); const stage = document.querySelector("#products .product-stage"); if (stage && stage.getBoundingClientRect().top < 90) stage.scrollIntoView({ behavior: reducedMotion(), block: "start" }); }} aria-pressed={product.id === p.id} aria-label={p.name}><DeferredImage src={`/images/product-previews/${p.id}.jpg`} alt="" loading="lazy" width="220" height="140" /><span>{labels[p.id] || p.name}</span></button>)}</div>
         </div>
       </> : <div className="product-empty"><h3>No matching equipment</h3><p>Try a broader search or choose another category.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("All products"); }}>Show all products</button></div>}
-      <details className="project-list-disclosure" open={projectOpen} onToggle={(e) => setProjectOpen(e.currentTarget.open)}><summary><FolderOpen size={23} /><strong>Your project list ({projectItems.length})</strong><span>Save, compare and enquire in one place.</span><i>+</i></summary><ProjectList items={projectItems} onChange={setProjectItems} onEdit={editProject} onEnquire={onEnquire} storageAvailable={storageAvailable} /></details>
+      <details className="project-list-disclosure" open={projectOpen} onToggle={(e) => setProjectOpen(e.currentTarget.open)}><summary><FolderOpen size={23} /><strong>Your project list ({projectItems.length})</strong><span>Save, compare and enquire in one place.</span><i>+</i></summary>{projectOpen && <Suspense fallback={<p className="quiet" role="status">Preparing your equipment list…</p>}><ProjectList items={projectItems} onChange={setProjectItems} onEdit={editProject} onEnquire={onEnquire} storageAvailable={storageAvailable} /></Suspense>}</details>
     </section>
   );
 }

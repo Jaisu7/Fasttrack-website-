@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import mark from "./brand-mark.json";
+import { readRenderQuality, frameIsDue } from "./render-quality.mjs";
 import {
   clampProgress,
   manufacturingState,
@@ -92,6 +93,9 @@ export function createManufacturingScene(
   canvas: HTMLCanvasElement,
   callbacks: Callbacks,
 ): ManufacturingScene {
+  let quality = readRenderQuality();
+  canvas.dataset.renderQuality = quality.mode;
+  canvas.dataset.maxFps = String(quality.maxFps);
   canvas.dataset.ready = "false";
   canvas.dataset.stage = "raw-steel";
   canvas.dataset.progress = "0.0000";
@@ -114,7 +118,7 @@ export function createManufacturingScene(
   };
   const contextAttributes: WebGLContextAttributes = {
     alpha: false,
-    antialias: true,
+    antialias: quality.antialias,
     depth: true,
     stencil: false,
     premultipliedAlpha: true,
@@ -137,14 +141,14 @@ export function createManufacturingScene(
       canvas,
       context,
       alpha: false,
-      antialias: true,
+      antialias: quality.antialias,
       powerPreference: "low-power",
     });
   } catch {
     callbacks.unavailable();
     return noScene;
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setPixelRatio(quality.pixelRatio);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.95;
@@ -211,7 +215,7 @@ export function createManufacturingScene(
   const key = new THREE.DirectionalLight(0xe9f2f7, 2.5);
   key.position.set(-3.5, 7, 4.5);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.mapSize.set(quality.shadowSize, quality.shadowSize);
   key.shadow.camera.left = -5;
   key.shadow.camera.right = 5;
   key.shadow.camera.top = 6;
@@ -713,7 +717,7 @@ export function createManufacturingScene(
   const hotLight = new THREE.PointLight(0xffa94d, 0, 1.1, 2),
     arcLight = new THREE.PointLight(0xaaddff, 0, 1.65, 2);
   scene.add(hotLight, arcLight);
-  const particleCount = 64,
+  const particleCount = quality.particles,
     particlePositions = new Float32Array(particleCount * 3),
     particleColors = new Float32Array(particleCount * 3);
   const particleGeometry = new THREE.BufferGeometry();
@@ -780,6 +784,16 @@ export function createManufacturingScene(
   }
   function resize() {
     if (!alive || failed) return;
+    quality = readRenderQuality();
+    renderer.setPixelRatio(quality.pixelRatio);
+    if (key.shadow.mapSize.x !== quality.shadowSize) {
+      key.shadow.mapSize.set(quality.shadowSize, quality.shadowSize);
+      key.shadow.map?.dispose();
+      key.shadow.map = null;
+    }
+    canvas.dataset.renderQuality = quality.mode;
+    canvas.dataset.maxFps = String(quality.maxFps);
+    canvas.dataset.pixelRatio = String(quality.pixelRatio);
     const rect = canvas.getBoundingClientRect();
     width = Math.max(1, rect.width);
     height = Math.max(1, rect.height);
@@ -986,6 +1000,7 @@ export function createManufacturingScene(
       lastTime = 0;
       return;
     }
+    if (!frameIsDue(time, lastTime, quality.maxFps)) { wake(); return; }
     const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.045) : 1 / 60;
     lastTime = time;
     draw(dt);

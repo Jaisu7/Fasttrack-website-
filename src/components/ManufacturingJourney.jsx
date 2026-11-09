@@ -34,7 +34,7 @@ export const journeyStages = [
   },
 ];
 const stageFor = (p) => manufacturingState(p).stageIndex;
-export default function ManufacturingJourney() {
+export default function ManufacturingJourney({ onReady }) {
   const root = useRef(null),
     pin = useRef(null),
     canvas = useRef(null),
@@ -67,23 +67,28 @@ export default function ManufacturingJourney() {
       .then((scene) => {
         if (!alive) return;
         engine.current = scene.createManufacturingScene(canvas.current, {
-          ready: () => alive && setReady(true),
-          unavailable: () => alive && setFallback(true),
+          ready: () => { if (alive) { setReady(true); onReady?.(); } },
+          unavailable: () => { if (alive) { setFallback(true); onReady?.(); } },
         });
         engine.current.setProgress(progress.current);
       })
-      .catch(() => alive && setFallback(true));
+      .catch(() => { if (alive) { setFallback(true); onReady?.(); } });
     return () => {
       alive = false;
       preference.removeEventListener("change", onPreference);
       engine.current?.destroy();
       engine.current = null;
     };
-  }, []);
+  }, [onReady]);
   useEffect(() => {
     let alive = true,
       context;
-    if (reduced) { show(1); return; }
+    const refresh = () => trigger.current?.refresh();
+    window.addEventListener("fastrack:intro-complete", refresh);
+    if (reduced) {
+      show(1);
+      return () => window.removeEventListener("fastrack:intro-complete", refresh);
+    }
     Promise.all([import("gsap"), import("gsap/ScrollTrigger")])
       .then(([{ gsap }, { ScrollTrigger }]) => {
         if (!alive) return;
@@ -119,10 +124,32 @@ export default function ManufacturingJourney() {
       });
     return () => {
       alive = false;
+      window.removeEventListener("fastrack:intro-complete", refresh);
       context?.revert();
       trigger.current = null;
     };
   }, [reduced]);
+  useEffect(() => {
+    let frame = 0;
+    let width = root.current?.clientWidth;
+    const refresh = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => trigger.current?.refresh());
+    };
+    const observer = new ResizeObserver(entries => {
+      const next = Math.round(entries[0].contentRect.width);
+      if (next === width) return;
+      width = next;
+      refresh();
+    });
+    if (root.current) observer.observe(root.current);
+    window.addEventListener("resize", refresh);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", refresh);
+    };
+  }, []);
   const s = journeyStages[stage];
   return (
     <section
@@ -152,6 +179,9 @@ export default function ManufacturingJourney() {
             src="/images/laser-bed.webp"
             alt=""
             fetchPriority="high"
+            decoding="async"
+            width="1254"
+            height="1254"
           />
           <canvas ref={canvas} className={fallback ? "unavailable" : ""} />
         </div>
@@ -165,11 +195,9 @@ export default function ManufacturingJourney() {
             >
               {stage === 0 ? (
                 <>
-                  <span>From Raw</span>{" "}
-                  <span>
-                    <em>Steel</em> to
-                  </span>{" "}
-                  <span>Extraordinary</span> <span>Engineering.</span>
+                  <span>From Raw <em>Steel</em></span>{" "}
+                  <span>to Extraordinary</span>{" "}
+                  <span>Engineering.</span>
                 </>
               ) : (
                 s.title
@@ -207,9 +235,6 @@ export default function ManufacturingJourney() {
         <span className="sr-only" aria-live="polite">
           Stage {stage + 1} of 5: {s.name}.
         </span>
-        {!ready && !fallback && (
-          <span className="scene-loading">Preparing the steel…</span>
-        )}
         {fallback && (
           <span className="scene-loading">
             Steel fabrication · From material to finished equipment

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createProductModel } from "./product-models";
+import { readRenderQuality, frameIsDue } from "./render-quality.mjs";
 
 export interface ProductViewerEngine {
   configure(config: { width: number; depth: number; height: number }): void;
@@ -30,6 +31,9 @@ export function createProductViewer(
   callbacks: Callbacks,
   configuration?: { shelves: number },
 ): ProductViewerEngine {
+  let quality = readRenderQuality();
+  canvas.dataset.renderQuality = quality.mode;
+  canvas.dataset.maxFps = String(quality.maxFps);
   const noEngine: ProductViewerEngine = {
     configure() {},
     setRotation() {},
@@ -44,7 +48,7 @@ export function createProductViewer(
     destroy() {},
   };
   const contextAttributes: WebGLContextAttributes = {
-    antialias: true,
+    antialias: quality.antialias,
     alpha: false,
     depth: true,
     stencil: false,
@@ -69,7 +73,7 @@ export function createProductViewer(
     renderer = new THREE.WebGLRenderer({
       canvas,
       context,
-      antialias: true,
+      antialias: quality.antialias,
       alpha: false,
       powerPreference: "low-power",
     });
@@ -81,12 +85,12 @@ export function createProductViewer(
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xe1e2df);
   const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 60);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  renderer.setPixelRatio(quality.pixelRatio);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.92;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.09;
@@ -198,7 +202,7 @@ export function createProductViewer(
   const key = new THREE.DirectionalLight(0xffffff, 2.1);
   key.position.set(-3.5, 6, 4);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.mapSize.set(quality.shadowSize, quality.shadowSize);
   key.shadow.camera.left = -4;
   key.shadow.camera.right = 4;
   key.shadow.camera.top = 5;
@@ -262,6 +266,16 @@ export function createProductViewer(
   }
   function resize() {
     if (!alive || failed) return;
+    quality = readRenderQuality();
+    renderer.setPixelRatio(quality.pixelRatio);
+    if (key.shadow.mapSize.x !== quality.shadowSize) {
+      key.shadow.mapSize.set(quality.shadowSize, quality.shadowSize);
+      key.shadow.map?.dispose();
+      key.shadow.map = null;
+    }
+    canvas.dataset.renderQuality = quality.mode;
+    canvas.dataset.maxFps = String(quality.maxFps);
+    canvas.dataset.pixelRatio = String(quality.pixelRatio);
     const rect = root.getBoundingClientRect();
     const w = Math.max(1, rect.width),
       h = Math.max(1, rect.height);
@@ -365,6 +379,7 @@ export function createProductViewer(
       lastTime = 0;
       return;
     }
+    if (!frameIsDue(time, lastTime, quality.maxFps)) { wake(); return; }
     drawing = true;
     const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 1 / 60;
     lastTime = time;
