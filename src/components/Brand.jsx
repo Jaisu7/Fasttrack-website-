@@ -1,8 +1,8 @@
-export default function Brand({ footer = false }) {
+export default function Brand({ footer = false, homeHref = "#home" }) {
   return (
     <a
       className={`brand${footer ? " brand-footer" : ""}`}
-      href="#home"
+      href={homeHref}
       aria-label="Fastrack Metallic home"
     >
       <img src="/images/brand-mark.svg" width="49" height="34" alt="" />

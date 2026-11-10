@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794301618497,
+      "tag": "0000_elite_sasquatch",
+      "breakpoints": true
+    }
+  ]
+}

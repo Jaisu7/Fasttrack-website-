@@ -24,6 +24,7 @@ export function createSiteMetadata({ siteUrl = previewOrigin, indexable = false 
   const meta = (name, content, property = false) => ({ tag: "meta", attrs: { [property ? "property" : "name"]: name, content } });
   return {
     canonical,
+    schema,
     tags: [
       { tag: "title", children: siteTitle },
       meta("description", siteDescription),

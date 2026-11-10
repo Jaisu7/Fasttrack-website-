@@ -6,7 +6,7 @@ export const journeyStages = [
     name: "Raw steel",
     jump: 0,
     title: "From Raw Steel to Extraordinary Engineering.",
-    copy: "Precision fabrication. Purpose-built kitchen equipment. Follow the journey from material to finished product.",
+    copy: "Custom stainless-steel kitchen equipment and fabrication in Sharjah. Explore how sheet metal becomes purpose-built equipment.",
   },
   {
     name: "Laser",
@@ -45,9 +45,7 @@ export default function ManufacturingJourney({ onReady }) {
   const [stage, setStage] = useState(0),
     [ready, setReady] = useState(false),
     [fallback, setFallback] = useState(false),
-    [reduced, setReduced] = useState(
-      () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    );
+    [reduced, setReduced] = useState(false);
   function show(p) {
     progress.current = p;
     engine.current?.setProgress(p);
@@ -62,6 +60,7 @@ export default function ManufacturingJourney({ onReady }) {
     let alive = true;
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const onPreference = () => setReduced(preference.matches);
+    onPreference();
     preference.addEventListener("change", onPreference);
     import("../lib/manufacturing-scene")
       .then((scene) => {
@@ -161,6 +160,11 @@ export default function ManufacturingJourney({ onReady }) {
     };
   }, []);
   const s = journeyStages[stage];
+  function chooseStage(item) {
+    const timeline = trigger.current;
+    if (!timeline || reduced) { show(item.jump); return; }
+    window.scrollTo({ top: timeline.start + (timeline.end - timeline.start) * item.jump, behavior: "smooth" });
+  }
   return (
     <section
       id="manufacturing"
@@ -199,7 +203,7 @@ export default function ManufacturingJourney({ onReady }) {
         <div className="journey-copy" key={stage}>
           <div className="journey-text">
             <p className="journey-stage-label">0{stage + 1} / 05 · {s.name}</p>
-            <h1
+            <h2
               aria-label={s.title}
               className={stage === 0 ? "hero-title" : "stage-title"}
             >
@@ -212,26 +216,26 @@ export default function ManufacturingJourney({ onReady }) {
               ) : (
                 s.title
               )}
-            </h1>
+            </h2>
             <p>{s.copy}</p>
             <div className="hero-actions">
               <a href="#products" className="button button-light">
                 Explore Our Products <ArrowUpRight size={20} />
               </a>
-              <a href="#enquiry" className="button button-outline">Discuss Your Project <ArrowUpRight size={20} /></a>
+              <a href="#enquiry-form" className="button button-outline">Discuss Your Project <ArrowUpRight size={20} /></a>
             </div>
           </div>
         </div>
         <div className="journey-bottom">
           <div className="stage-rail" aria-label="Manufacturing stages">
             {journeyStages.map((item, i) => (
-              <span
+              <button type="button" onClick={() => chooseStage(item)} aria-label={`Show ${item.name} manufacturing stage`}
                 key={item.name}
                 className={stage === i ? "active" : ""}
                 aria-current={stage === i ? "step" : undefined}
               >
                 <span className="stage-number">0{i + 1}</span> {item.name}
-              </span>
+              </button>
             ))}
           </div>
           <div className="journey-caption">

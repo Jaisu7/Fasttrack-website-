@@ -33,5 +33,5 @@ export default function usePageReadiness(sceneReady) {
   }, []);
 
   const completed = Number(fontsReady) + Number(imageReady) + Number(sceneReady);
-  return { completed, total: 3, progress: completed / 3, pending: completed < 3 && !expired, expired };
+  return { completed, total: 3, progress: completed / 3, essentialReady: fontsReady && imageReady, pending: completed < 3 && !expired, expired };
 }

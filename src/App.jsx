@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
 import SiteMotion from "./components/SiteMotion";
 import Header from "./components/Header";
 import ManufacturingJourney from "./components/ManufacturingJourney";
@@ -9,6 +8,7 @@ import Enquiry from "./components/Enquiry";
 import WorkshopWidget from "./components/WorkshopWidget";
 import PageLoading from "./components/PageLoading";
 import usePageReadiness from "./lib/use-page-readiness";
+import CompanyStory from "./components/CompanyStory";
 export default function App() {
   const [revealKey, setRevealKey] = useState(0);
   const [loadingOpen, setLoadingOpen] = useState(true);
@@ -23,7 +23,15 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (loadingOpen) return;
-    const frame = requestAnimationFrame(() => window.dispatchEvent(new Event("fastrack:intro-complete")));
+    const frame = requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("fastrack:intro-complete"));
+      const hash = window.location.hash;
+      if (["#products", "#enquiry-form", "#enquiry", "#studio", "#about"].includes(hash)) {
+        const target = document.getElementById(hash.slice(1));
+        target?.scrollIntoView({ behavior: "instant", block: "start" });
+        if (hash === "#enquiry-form") target?.focus({ preventScroll: true });
+      }
+    });
     return () => cancelAnimationFrame(frame);
   }, [loadingOpen]);
   const [process, setProcess] = useState(0),
@@ -33,13 +41,18 @@ export default function App() {
     setConfigurationDetails(summary);
     setRequirement(name);
     document
-      .getElementById("enquiry")
+      .getElementById("enquiry-form")
       .scrollIntoView({
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
           ? "instant"
           : "smooth",
       });
+    requestAnimationFrame(() => document.getElementById("enquiry-form")?.focus({ preventScroll: true }));
   }
+  useEffect(() => {
+    const incoming = new URLSearchParams(window.location.search).get("requirement");
+    if (incoming) setRequirement(incoming);
+  }, []);
   return (
     <>
       {loadingOpen && <PageLoading key={`opening-${revealKey}`} loading={loading} replay={revealKey > 0} onComplete={finishOpening} />}
@@ -47,18 +60,10 @@ export default function App() {
       <Header />
       <SiteMotion />
       <main id="home">
+        <h1 className="sr-only">Stainless-steel kitchen equipment and fabrication in Sharjah</h1>
         <ManufacturingJourney onReady={markSceneReady} />
         <ProcessStudio selected={process} setSelected={setProcess} onEnquire={enquire} />
-        <div id="about" className="about-line section">
-          <p>
-            Fastrack Metallic brings stainless-steel fabrication, commercial
-            kitchen equipment and custom retail solutions together. Share a
-            drawing, a layout or an idea. We’ll help define the next step.
-          </p>
-          <a href="#enquiry" className="text-link">
-            Start a conversation <ArrowUpRight size={20} />
-          </a>
-        </div>
+        <CompanyStory />
         <ProductShowroom onEnquire={enquire} />
         <Enquiry requirement={requirement} setRequirement={setRequirement} configurationDetails={configurationDetails} onReplayIntro={replayIntro} />
       </main>

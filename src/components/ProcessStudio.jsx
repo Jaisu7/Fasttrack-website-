@@ -111,6 +111,7 @@ function ProcessScene({ process, onEnquire }) {
           <div><dt>Material & project review</dt><dd>{capabilityDetails[process.id].material}</dd></div>
         </dl>
         <button type="button" className="button button-light capability-enquiry" onClick={() => onEnquire(process.tab)}>Enquire about {process.tab} <ArrowUpRight size={18} /></button>
+        <a className="service-information-link" href={`/services/${process.id === "laser" ? "laser-cutting" : process.id === "punching" ? "cnc-punching" : process.id}`}>Service details & quotation guidance ↗</a>
         <p className="quiet capability-note">Material suitability and machine capacity are confirmed after drawing review.</p>
         <p className="sr-only" id={`instructions-${process.id}`}>Use arrow keys to guide the manufacturing demonstration.</p>
       </div>

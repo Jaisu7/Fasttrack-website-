@@ -58,13 +58,7 @@ export function createLaserAnimation(
       leave() {},
       nudge() {},
       pause() {},
-      automatic() {
-      manualUntil = 0;
-      setManual(false);
-      tiltTargetX = tiltTargetY = 0;
-      wake();
-    },
-    reset() {},
+      reset() {},
       automatic() {},
       destroy() {},
     };

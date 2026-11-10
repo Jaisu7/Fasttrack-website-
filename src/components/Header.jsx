@@ -42,7 +42,7 @@ export default function Header() {
             About
           </a>
         </nav>
-        <a className="button button-green header-quote" href="#enquiry" onClick={() => setOpen(false)}>
+        <a className="button button-green header-quote" href="#enquiry-form" onClick={() => setOpen(false)}>
           Request a quote <ArrowUpRight size={20} />
         </a>
         <button

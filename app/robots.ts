@@ -1,0 +1,1 @@
+export default function robots(){const origin=process.env.SITE_URL||'https://fastrack-metallic-git-preview.alertmouse130.chatgpt.site';return {rules:process.env.SITE_INDEXABLE==='true'?{userAgent:'*',allow:'/',disallow:['/admin/','/api/']}:{userAgent:'*',disallow:'/'},sitemap:`${origin}/sitemap.xml`};}
