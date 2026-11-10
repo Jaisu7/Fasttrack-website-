@@ -93,7 +93,12 @@ export default function ManufacturingJourney({ onReady }) {
       .then(([{ gsap }, { ScrollTrigger }]) => {
         if (!alive) return;
         gsap.registerPlugin(ScrollTrigger);
-        context = gsap.context(() => {
+        context = gsap.matchMedia(root.current);
+        context.add({
+          mobile: "(max-width: 720px), (hover: none) and (pointer: coarse)",
+          always: "all",
+        }, ({ conditions }) => {
+          const mobile = conditions.mobile;
           const state = { p: 0 };
           const instance = gsap.fromTo(
             state,
@@ -108,16 +113,21 @@ export default function ManufacturingJourney({ onReady }) {
                 trigger: root.current,
                 pin: pin.current,
                 start: "top top",
-                end: () =>
-                  `+=${window.innerHeight * (window.innerWidth < 720 ? 2.7 : 3.6)}`,
-                scrub: 0.6,
+                end: () => {
+                  // The small-viewport pin stays stable as phone browser bars move.
+                  // More travel lets each fabrication stage remain readable.
+                  const height = mobile ? pin.current.clientHeight : window.innerHeight;
+                  return `+=${mobile ? Math.max(4800, height * 6.5) : height * 3.6}`;
+                },
+                scrub: mobile ? 1.2 : 0.6,
                 invalidateOnRefresh: true,
                 anticipatePin: 1,
               },
             },
           );
           trigger.current = instance.scrollTrigger;
-        }, root);
+          return () => { trigger.current = null; };
+        });
       })
       .catch(() => {
         show(1);
