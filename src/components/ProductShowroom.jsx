@@ -140,12 +140,22 @@ export default function ProductShowroom({ onEnquire }) {
   const [category, setCategory] = useState("All products"),
     [query, setQuery] = useState(""),
     [configurations, setConfigurations] = useState({}),
-    [projectItems, setProjectItems] = useState(() => { try { return readProject(localStorage.getItem(PROJECT_STORAGE_KEY), products); } catch { return []; } }),
+    [projectItems, setProjectItems] = useState([]),
+    [storageRestored, setStorageRestored] = useState(false),
     [storageAvailable, setStorageAvailable] = useState(true),
     [projectStatus, setProjectStatus] = useState(""),
     [projectOpen, setProjectOpen] = useState(false),
     [selected, setSelected] = useState(products[0].id);
-  useEffect(() => { try { localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify({ version: 1, items: projectItems })); } catch { setStorageAvailable(false); } }, [projectItems]);
+  useEffect(() => {
+    try { setProjectItems(readProject(localStorage.getItem(PROJECT_STORAGE_KEY), products)); }
+    catch { setStorageAvailable(false); }
+    setStorageRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!storageRestored) return;
+    try { localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify({ version: 1, items: projectItems })); }
+    catch { setStorageAvailable(false); }
+  }, [projectItems, storageRestored]);
   useEffect(() => {
     const sync = (event) => { if (event.key === PROJECT_STORAGE_KEY) setProjectItems(readProject(event.newValue, products)); };
     window.addEventListener("storage", sync);
