@@ -6,7 +6,7 @@ const processes = [
     id: "laser",
     tab: "Laser cutting",
     title: "CNC laser cutting",
-    copy: "A focused beam traces the Fastrack mark, then lifts clear for the finished sheet to leave.",
+    copy: "Profiles and openings prepared around your drawings, from equipment panels to decorative components.",
     instruction:
       "Move across the sheet to guide a cut. The automatic toolpath waits while you guide the head. Use arrow keys for precise control.",
   },
@@ -14,7 +14,7 @@ const processes = [
     id: "punching",
     tab: "CNC punching",
     title: "Precision in every stroke.",
-    copy: "Position. Clamp. Punch. The ram retracts before the next opening is positioned.",
+    copy: "Repeated openings and perforation patterns for ventilation panels, enclosures and equipment components.",
     instruction:
       "Move to choose the next punch position. The tool finishes each stroke before moving sideways. Arrow keys also guide the tool.",
   },
@@ -22,7 +22,7 @@ const processes = [
     id: "bending",
     tab: "Bending",
     title: "From flat sheet to form.",
-    copy: "A controlled press stroke shapes the sheet. The formed part leaves before a fresh blank arrives.",
+    copy: "Folded panels, edges and channels that turn your sheet-metal layout into practical components.",
     instruction:
       "Move vertically to control the bend. Use up and down arrow keys for precise control.",
   },
@@ -30,7 +30,7 @@ const processes = [
     id: "welding",
     tab: "Welding",
     title: "A connection that lasts.",
-    copy: "Follow the original mark with a continuous illustrative weld bead.",
+    copy: "Joining fabricated parts into equipment, counters and assemblies, with the required finish reviewed for your project.",
     instruction:
       "Move along the emblem to guide the torch. The finished panel exits before the next cycle.",
   },
@@ -157,7 +157,8 @@ function ProcessScene({ process, onEnquire }) {
 }
 export default function ProcessStudio({ selected, setSelected, onEnquire }) {
   return (
-    <section id="studio" tabIndex={-1} className="section process-section">
+    <section id="studio" tabIndex={-1} className="section process-section light-section">
+      <div className="chapter-label"><span>03 / Capabilities</span><i/></div>
       <div className="section-heading reveal">
         <h2>
           Four processes.

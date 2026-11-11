@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { manufacturingState } from "../lib/journey-state.mjs";
+import { RollingText } from "./Experience";
 export const journeyStages = [
   {
     name: "Raw steel",
@@ -12,25 +13,25 @@ export const journeyStages = [
     name: "Laser",
     jump: 0.25,
     title: "Precision starts with a single cut.",
-    copy: "The original Fastrack mark takes shape in the steel. Every contour follows the same primary panel.",
+    copy: "Cut profiles and openings for equipment panels, interiors and custom sheet-metal components.",
   },
   {
     name: "Bend",
     jump: 0.61,
     title: "Flat steel. New possibilities.",
-    copy: "A controlled press-brake stroke folds the primary panel into a cabinet shell.",
+    copy: "Folded panels, edges and channels bring your equipment layout into three dimensions.",
   },
   {
     name: "Weld",
     jump: 0.78,
     title: "Individual parts. One complete vision.",
-    copy: "Additional components join the formed panel. A precise seam brings the structure together.",
+    copy: "Fabricated components come together as equipment, frames and assemblies for your working space.",
   },
   {
     name: "Finished",
     jump: 0.94,
     title: "Engineered for what comes next.",
-    copy: "From a representative sheet to a complete cabinet concept. Explore the products behind the process.",
+    copy: "Explore equipment layouts, choose your requirements and share a specification for quotation review.",
   },
 ];
 const stageFor = (p) => manufacturingState(p).stageIndex;
@@ -176,6 +177,9 @@ export default function ManufacturingJourney({ onReady }) {
         ref={pin}
         className="journey-pin"
         data-stage={s.name}
+        onPointerDown={() => engine.current?.setInteracting(true)}
+        onPointerUp={() => engine.current?.setInteracting(false)}
+        onPointerCancel={() => engine.current?.setInteracting(false)}
         onPointerMove={(e) => {
           if (e.pointerType === "mouse") {
             const r = e.currentTarget.getBoundingClientRect();
@@ -187,7 +191,8 @@ export default function ManufacturingJourney({ onReady }) {
         }}
         onPointerLeave={() => engine.current?.setPointer(0, 0)}
       >
-        <div className="journey-media" aria-hidden="true">
+        <div className="journey-media" aria-hidden="true" onPointerEnter={e => { if (e.pointerType === "mouse") engine.current?.setInteracting(true); }} onPointerLeave={() => engine.current?.setInteracting(false)}>
+          <div className="scene-guides"><i/><i/></div>
           <img
             className={`journey-fallback${ready && !fallback ? " hidden" : ""}`}
             src="/images/laser-bed.webp"
@@ -202,7 +207,7 @@ export default function ManufacturingJourney({ onReady }) {
         <div className="journey-shade" />
         <div className="journey-copy" key={stage}>
           <div className="journey-text">
-            <p className="journey-stage-label">0{stage + 1} / 05 · {s.name}</p>
+            <p className="journey-stage-label sr-only">0{stage + 1} / 05 · {s.name}</p>
             <h2
               aria-label={s.title}
               className={stage === 0 ? "hero-title" : "stage-title"}
@@ -217,14 +222,9 @@ export default function ManufacturingJourney({ onReady }) {
                 s.title
               )}
             </h2>
-            <p>{s.copy}</p>
-            <div className="hero-actions">
-              <a href="#products" className="button button-light">
-                Explore Our Products <ArrowUpRight size={20} />
-              </a>
-              <a href="#enquiry-form" className="button button-outline">Discuss Your Project <ArrowUpRight size={20} /></a>
-            </div>
           </div>
+          <div className="journey-support"><p>{s.copy}</p></div>
+          <div className="hero-actions"><a href="#products" className="button button-light" aria-label="Explore Our Products"><RollingText>Explore Our Products</RollingText><ArrowUpRight size={20}/></a><a href="#enquiry-form" className="button button-outline" aria-label="Discuss Your Project"><RollingText>Discuss Your Project</RollingText><ArrowUpRight size={20}/></a></div>
         </div>
         <div className="journey-bottom">
           <div className="stage-rail" aria-label="Manufacturing stages">

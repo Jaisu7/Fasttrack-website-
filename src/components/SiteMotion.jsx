@@ -26,9 +26,9 @@ export default function SiteMotion() {
             ? entry.target.children : [entry.target];
           Array.from(targets).forEach((target, index) => {
             const animation = target.animate([
-              { opacity: 0, transform: "translateY(28px)" },
+              { opacity: 0, transform: "translateY(14px)" },
               { opacity: 1, transform: "translateY(0)" },
-            ], { duration: 850, delay: index * 100, easing: "cubic-bezier(.16,1,.3,1)" });
+            ], { duration: 560, delay: index * 60, easing: "cubic-bezier(.22,1,.36,1)" });
             animations.add(animation);
             animation.onfinish = () => animations.delete(animation);
           });

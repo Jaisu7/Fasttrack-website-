@@ -18,8 +18,10 @@ import { PROJECT_STORAGE_KEY, addProjectItem, readProject, createProjectItemId }
 import ProductConfigurator from "./ProductConfigurator";
 import { normalizeConfiguration, supportsConfiguration, configurationSummary } from "../lib/product-configuration.mjs";
 import { products, categories } from "../lib/fasttrack-data";
+import { createEquipmentSearch } from "../lib/product-search.mjs";
 import DeferredImage from "./DeferredImage";
 const ProjectList = lazy(() => import("./ProjectList"));
+const searchEquipment = createEquipmentSearch(products);
 function ProductViewer({ product, configuration, onFinish, onAdd, onEnquire, viewerMode, onActivate, onPreview, children }) {
   const canvas = useRef(null),
     root = useRef(null),
@@ -178,10 +180,7 @@ export default function ProductShowroom({ onEnquire }) {
     document.getElementById("products")?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
     setProjectStatus("Adjust the preview, then add it as a new option to compare. The saved option stays in your list.");
   }
-  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const matches = products.filter((p) => words.every((word) =>
-    [p.name, p.description, p.detail, ...p.options].join(" ").toLowerCase().includes(word),
-  ));
+  const matches = searchEquipment(query);
   const visible = matches.filter(
     (p) => category === "All products" || p.category === category,
   );
@@ -194,17 +193,25 @@ export default function ProductShowroom({ onEnquire }) {
   const categoryLabels = { "All products": "All equipment", "Kitchen equipment": "Kitchen", "Display & refrigeration": "Refrigeration", Storage: "Storage", "Custom fabrication": "Custom" };
   const galleryOrder = ["worktable", "refrigerator", "hot-cabinet", "display", "sink", "rack", "sink-shelf", "shelves", "produce-shelf", "cabinets", "custom"];
   const galleryProducts = [...visible].sort((a, b) => galleryOrder.indexOf(a.id) - galleryOrder.indexOf(b.id));
+  const currentIndex = galleryProducts.findIndex(item => item.id === product?.id);
+  function selectFamily(index) {
+    const item = galleryProducts[(index + galleryProducts.length) % galleryProducts.length];
+    if (!item) return;
+    setSelected(item.id); setProjectStatus("");
+    requestAnimationFrame(() => gallery.current?.querySelector(`[aria-label="${item.name}"]`)?.scrollIntoView({ behavior: reducedMotion(), block: "nearest", inline: "nearest" }));
+  }
   return (
-    <section id="products" className="section products-section">
-      <div className="product-section-heading"><h2>Precision, on display.</h2><p>Explore. Refine. Make it yours.</p></div>
+    <section id="products" tabIndex={-1} className="section products-section">
+      <div className="chapter-label"><span>04 / Equipment</span><i/></div>
+      <div className="product-section-heading"><h2>Selected equipment.</h2><p>Explore. Refine. Make it yours.</p></div>
       <div className="product-browse-bar">
         <div className="tab-rail category-rail" aria-label="Product categories">{categories.map((c) => <button key={c} aria-pressed={category === c} onClick={() => { setCategory(c); setProjectStatus(""); }}>{categoryLabels[c]}</button>)}</div>
-        <label className="product-search"><Search size={18} /><span className="sr-only">Find your equipment</span><input aria-label="Find your equipment" type="search" placeholder="Search equipment, e.g. table, sink…" value={query} onChange={(e) => { setQuery(e.target.value); setProjectStatus(""); }} /></label>
+        <label className="product-search"><Search size={18} /><span className="sr-only">Find your equipment</span><input aria-label="Find your equipment" type="search" maxLength="160" placeholder="Search equipment, e.g. table, fridge…" value={query} onChange={(e) => { setQuery(e.target.value); setProjectStatus(""); }} /></label>
       </div>
       <p className="browse-guidance">Choose your equipment below, then explore the model or adjust your request.</p>
       {(query || category !== "All products") && <div className="product-filter-status"><span role="status">{visible.length} equipment {visible.length === 1 ? "family" : "families"}</span><button className="text-control" onClick={() => { setQuery(""); setCategory("All products"); }}>Clear filters</button></div>}
       {product ? <>
-        <div className="product-gallery-wrap"><div className="product-gallery-heading"><span>Explore the collection</span><div><button aria-label="Previous products" onClick={() => gallery.current?.scrollBy({ left: -450, behavior: reducedMotion() })}><ChevronLeft size={18} /></button><button aria-label="Next products" onClick={() => gallery.current?.scrollBy({ left: 450, behavior: reducedMotion() })}><ChevronRight size={18} /></button></div></div>
+        <div className="product-gallery-wrap"><div className="product-gallery-heading"><span>Explore the collection</span><div><span className="equipment-counter" role="status">{String(currentIndex + 1).padStart(2,"0")} / {String(galleryProducts.length).padStart(2,"0")}</span><button aria-label="Previous equipment" onClick={() => selectFamily(currentIndex - 1)}><ChevronLeft size={18} /></button><button aria-label="Next equipment" onClick={() => selectFamily(currentIndex + 1)}><ChevronRight size={18} /></button></div></div>
           <div ref={gallery} className="product-list product-gallery" aria-label="Product families">{galleryProducts.map((p) => <button key={p.id} onClick={() => { setSelected(p.id); setProjectStatus(""); const stage = document.querySelector("#products .product-stage"); if (stage && stage.getBoundingClientRect().top < 90) stage.scrollIntoView({ behavior: reducedMotion(), block: "start" }); }} aria-pressed={product.id === p.id} aria-label={p.name}><DeferredImage src={`/images/product-previews/${p.id}.jpg`} alt="" loading="lazy" width="220" height="140" /><span>{labels[p.id] || p.name}</span></button>)}</div>
         </div>
         <ProductViewer key={`${product.id}:${configuration?.shelves ?? "default"}`} product={product} configuration={configuration} viewerMode={viewerMode} onActivate={() => setViewerMode("3d")} onPreview={() => setViewerMode("image")} onFinish={configuration ? (finish) => changeConfiguration({ ...configuration, finish }) : undefined} onAdd={addToProject} onEnquire={onEnquire}>

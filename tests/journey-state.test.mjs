@@ -6,6 +6,20 @@ test("five manufacturing stages omit punching throughout the intro", () => {
     assert.equal(module.manufacturingState(p).stageIndex, index),
   );
 });
+test("finished cabinet settles, makes one bounded turn and then rests", () => {
+  assert.equal(module.finishedReveal(0.5).angle, 0);
+  assert.equal(module.finishedReveal(0.5).phase, 'settling');
+  let previous = 0;
+  for (let time = 0; time <= 40; time += 0.1) {
+    const reveal = module.finishedReveal(time);
+    assert.ok(reveal.angle >= previous);
+    assert.ok(reveal.angle <= Math.PI * 2);
+    previous = reveal.angle;
+  }
+  assert.equal(module.finishedReveal(31).phase, 'settled');
+  assert.equal(module.finishedReveal(31).angle, Math.PI * 2);
+  assert.equal(module.finishedReveal(10000).angle, module.finishedReveal(31).angle);
+});
 test("interior shelf stays within the cabinet throughout assembly and the finished reveal", () => {
   const { halfWidth, bottom, top, back, front, shelfSize } = module.cabinetInterior;
   assert.equal(module.interiorShelfState(0.69).visible, false);

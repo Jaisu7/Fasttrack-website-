@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createProductModel } from "./product-models";
 import { readRenderQuality, frameIsDue } from "./render-quality.mjs";
+import { watchTechnicalView } from "./technical-view";
 
 export interface ProductViewerEngine {
   configure(config: { width: number; depth: number; height: number }): void;
@@ -244,12 +245,16 @@ export function createProductViewer(
   const homeDirection = new THREE.Vector3(1.5, 0.92, 2.1).normalize();
 
   function framingDistance() {
-    const vertical = Math.max(size.y * 1.18, (size.x / aspect) * 1.14);
-    return (
-      (vertical / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) +
-        size.z * 0.42) *
-      (aspect < 1.25 ? 1.08 : 1.27)
-    );
+    const tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+    const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), homeDirection).normalize();
+    const up = new THREE.Vector3().crossVectors(homeDirection, right).normalize();
+    let fit = 1;
+    for (const x of [-0.5, 0.5]) for (const y of [-0.5, 0.5]) for (const z of [-0.5, 0.5]) {
+      const corner = new THREE.Vector3(size.x * x, size.y * (y + 0.06), size.z * z);
+      const projected = Math.max(Math.abs(corner.dot(right)) / (tangent * aspect), Math.abs(corner.dot(up)) / tangent);
+      fit = Math.max(fit, corner.dot(homeDirection) + projected * 1.18);
+    }
+    return fit;
   }
   function home() {
     canvas.dataset.view = "perspective";
@@ -462,6 +467,13 @@ export function createProductViewer(
   canvas.addEventListener("webglcontextlost", onContextLost);
   observer.observe(root);
   dimensions.observe(root);
+  const stopTechnicalView = watchTechnicalView(model.group, active => {
+    scene.background = new THREE.Color(active ? 0x101619 : 0xe1e2df);
+    floor.visible = contact.visible = !active;
+    canvas.dataset.viewMode = active ? "technical" : "studio";
+    dirtyFrames = 2;
+    wake();
+  });
   resize();
 
   return {
@@ -563,6 +575,7 @@ export function createProductViewer(
     },
     destroy() {
       if (!alive) return;
+      stopTechnicalView();
       alive = false;
       stop();
       canvas.removeEventListener("pointerdown", onPointerDown);

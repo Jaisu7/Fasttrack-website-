@@ -9,6 +9,7 @@ import WorkshopWidget from "./components/WorkshopWidget";
 import PageLoading from "./components/PageLoading";
 import usePageReadiness from "./lib/use-page-readiness";
 import CompanyStory from "./components/CompanyStory";
+import Approach from "./components/Approach";
 export default function App() {
   const [revealKey, setRevealKey] = useState(0);
   const [loadingOpen, setLoadingOpen] = useState(true);
@@ -26,7 +27,7 @@ export default function App() {
     const frame = requestAnimationFrame(() => {
       window.dispatchEvent(new Event("fastrack:intro-complete"));
       const hash = window.location.hash;
-      if (["#products", "#enquiry-form", "#enquiry", "#studio", "#about"].includes(hash)) {
+      if (["#products", "#enquiry-form", "#enquiry", "#studio", "#about", "#approach"].includes(hash)) {
         const target = document.getElementById(hash.slice(1));
         target?.scrollIntoView({ behavior: "instant", block: "start" });
         if (hash === "#enquiry-form") target?.focus({ preventScroll: true });
@@ -62,10 +63,11 @@ export default function App() {
       <main id="home">
         <h1 className="sr-only">Stainless-steel kitchen equipment and fabrication in Sharjah</h1>
         <ManufacturingJourney onReady={markSceneReady} />
-        <ProcessStudio selected={process} setSelected={setProcess} onEnquire={enquire} />
         <CompanyStory />
+        <Approach />
+        <ProcessStudio selected={process} setSelected={setProcess} onEnquire={enquire} />
         <ProductShowroom onEnquire={enquire} />
-        <Enquiry requirement={requirement} setRequirement={setRequirement} configurationDetails={configurationDetails} onReplayIntro={replayIntro} />
+        <Enquiry requirement={requirement} setRequirement={setRequirement} configurationDetails={configurationDetails} onClearConfiguration={() => setConfigurationDetails("")} onReplayIntro={replayIntro} />
       </main>
       <WorkshopWidget
         onSelect={(i) => {

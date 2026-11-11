@@ -4,12 +4,14 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import mark from "./brand-mark.json";
 import { readRenderQuality, frameIsDue } from "./render-quality.mjs";
+import { watchTechnicalView } from "./technical-view";
 import {
   clampProgress,
   manufacturingState,
   smoothRange,
   cabinetInterior,
   interiorShelfState,
+  finishedReveal,
 } from "./journey-state.mjs";
 
 type Vec3 = [number, number, number];
@@ -22,6 +24,7 @@ export interface ManufacturingScene {
   setProgress(value: number): void;
   /** Pointer coordinates in [-1, 1]; (0, 0) is neutral. */
   setPointer(x: number, y: number): void;
+  setInteracting(value: boolean): void;
   pause(value: boolean): void;
   reset(): void;
   destroy(): void;
@@ -108,6 +111,7 @@ export function createManufacturingScene(
       callbacks.progress?.(state.progress, state.stage);
     },
     setPointer() {},
+    setInteracting() {},
     pause(value) {
       canvas.dataset.paused = String(value);
     },
@@ -747,6 +751,7 @@ export function createManufacturingScene(
 
   const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
   let reduced = preference.matches,
+    interacting = false,
     paused = false,
     alive = true,
     failed = false,
@@ -799,9 +804,7 @@ export function createManufacturingScene(
     height = Math.max(1, rect.height);
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
-    if (width >= 720)
-      camera.setViewOffset(width, height, -width * 0.2, 0, width, height);
-    else camera.clearViewOffset();
+    camera.clearViewOffset();
     camera.updateProjectionMatrix();
     dirtyFrames = 2;
     if (width > 1 && height > 1) draw(0);
@@ -812,7 +815,7 @@ export function createManufacturingScene(
     }
     wake();
   }
-  function draw(dt: number) {
+  function draw(dt: number, revealDelta = dt) {
     if (!alive || failed) return;
     const state = manufacturingState(progress);
     const sceneProgress = state.sceneProgress;
@@ -823,15 +826,15 @@ export function createManufacturingScene(
     if (stageMoving) elapsed += dt;
     // Rotate the complete assembly only after welding and door installation finish.
     const assembled = state.weld >= 1 && state.doors >= 1;
-    if (state.stageIndex === 4 && assembled && stageMoving)
-      showroomTime += dt * smoothRange(state.finish, 0.35, 0.65);
+    if (state.stageIndex === 4 && assembled && stageMoving && !interacting && state.finish >= 0.65)
+      showroomTime += revealDelta;
     else if (state.stageIndex !== 4 || !assembled) showroomTime = 0;
     product.position.x = (1 - smoothRange(state.raw, 0, 1)) * 0.5;
     plinth.visible = sceneProgress < 0.115;
     plinth.position.y = 0.47 - smoothRange(sceneProgress, 0.065, 0.115) * 1.1;
     product.rotation.y =
       smoothRange(state.finish, 0.05, 1) * -0.22 +
-      (reduced ? 0 : showroomTime * 0.24);
+      (reduced ? 0 : finishedReveal(showroomTime).angle);
     primaryRig.rotation.x = (state.upright * Math.PI) / 2;
     replacePrimary(0);
     foldPrimary(state.foldLeft, state.foldRight);
@@ -946,14 +949,14 @@ export function createManufacturingScene(
       particleGeometry.getAttribute("color").needsUpdate = true;
     }
     const aspect = width / height,
-      usableAspect = width >= 720 ? aspect * 0.56 : aspect * 0.94;
+      usableAspect = aspect * 0.94;
     const fit = Math.max(
       6.3,
       (panelWidth /
         (2 * Math.tan(THREE.MathUtils.degToRad(38) / 2) * usableAspect)) *
         1.1,
     );
-    const cameraDistance = fit * (1 - smoothRange(state.finish, 0, 0.7) * 0.17);
+    const cameraDistance = fit * (1 - smoothRange(state.finish, 0, 0.7) * 0.34);
     const direction = new THREE.Vector3(
       2.8 + pointerX * 0.3,
       4.6 - state.upright * 2.15 - pointerY * 0.2,
@@ -980,6 +983,10 @@ export function createManufacturingScene(
     canvas.dataset.ready = "true";
     canvas.dataset.paused = String(paused);
     canvas.dataset.motion = reduced ? "reduced" : "standard";
+    canvas.dataset.reveal = interacting ? "paused" : finishedReveal(showroomTime).phase;
+    canvas.dataset.revealAngle = finishedReveal(showroomTime).angle.toFixed(4);
+    canvas.dataset.visible = String(visible);
+    canvas.dataset.revealTime = showroomTime.toFixed(2);
     canvas.dataset.primaryPanel = "same-representative-shell";
     canvas.dataset.punched = String(holes);
     canvas.dataset.foldLeft = state.foldLeft.toFixed(3);
@@ -1001,12 +1008,16 @@ export function createManufacturingScene(
       return;
     }
     if (!frameIsDue(time, lastTime, quality.maxFps)) { wake(); return; }
-    const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.045) : 1 / 60;
+    // Keep the deliberate 30-second reveal independent of GPU frame rate.
+    // Physics uses a bounded step; visibility/pause handling resets the clock.
+    const activeDelta = lastTime ? Math.max(0, (time - lastTime) / 1000) : 1 / 60;
+    const dt = Math.min(activeDelta, 0.045);
     lastTime = time;
-    draw(dt);
+    draw(dt, activeDelta);
     dirtyFrames = Math.max(0, dirtyFrames - 1);
     const state = manufacturingState(progress);
-    const ambient = !paused && !reduced && [1, 3, 4].includes(state.stageIndex);
+    const revealActive = state.stageIndex === 4 && state.weld >= 1 && state.doors >= 1 && state.finish >= 0.65 && !interacting && !finishedReveal(showroomTime).complete;
+    const ambient = !paused && !reduced && ([1, 3].includes(state.stageIndex) || revealActive);
     const pointerMoving =
       Math.abs(pointerX - targetX) + Math.abs(pointerY - targetY) > 0.001;
     if (ambient || dirtyFrames || pointerMoving) wake();
@@ -1044,6 +1055,11 @@ export function createManufacturingScene(
   document.addEventListener("visibilitychange", onVisibility);
   preference.addEventListener("change", onPreference);
   canvas.addEventListener("webglcontextlost", onContextLost);
+  const stopTechnicalView = watchTechnicalView(product, active => {
+    canvas.dataset.viewMode = active ? "technical" : "studio";
+    dirtyFrames = 2;
+    wake();
+  });
   resize();
 
   return {
@@ -1058,12 +1074,18 @@ export function createManufacturingScene(
       dirtyFrames = 2;
       wake();
     },
+    setInteracting(value) {
+      interacting = value;
+      dirtyFrames = 2;
+      wake();
+    },
     pause(value) {
       paused = value;
       dirtyFrames = 2;
       wake();
     },
     reset() {
+      interacting = false;
       progress =
         elapsed =
         showroomTime =
@@ -1077,6 +1099,7 @@ export function createManufacturingScene(
     },
     destroy() {
       if (!alive) return;
+      stopTechnicalView();
       alive = false;
       stop();
       observer.disconnect();

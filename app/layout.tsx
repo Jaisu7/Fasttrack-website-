@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { company, siteDescription, siteTitle } from '../src/lib/site-info.mjs';
 import { createSiteMetadata } from '../scripts/site-metadata.mjs';
 import './globals.css';
+import { ExperienceProvider } from '../src/components/Experience.jsx';
 const origin = process.env.SITE_URL || 'https://fastrack-metallic-git-preview.alertmouse130.chatgpt.site';
 const indexable = process.env.SITE_INDEXABLE === 'true';
 const site = createSiteMetadata({ siteUrl: origin, indexable });
@@ -13,5 +14,5 @@ export const metadata: Metadata = {
 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const schema = site.schema;
-  return <html lang="en" data-theme="dark"><head><meta name="theme-color" content="#101619" /><link rel="preload" href="/fonts/manrope-600.woff2" as="font" type="font/woff2" crossOrigin="anonymous" /><link rel="preload" href="/images/laser-bed.webp" as="image" fetchPriority="high" /></head><body>{children}<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} /></body></html>;
+  return <html lang="en" data-theme="dark"><head><meta name="theme-color" content="#101619" /><link rel="preload" href="/fonts/manrope-600.woff2" as="font" type="font/woff2" crossOrigin="anonymous" /></head><body><ExperienceProvider>{children}</ExperienceProvider><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} /></body></html>;
 }

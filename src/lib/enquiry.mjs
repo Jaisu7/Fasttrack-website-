@@ -1,4 +1,10 @@
 import { company as contact } from "./site-info.mjs";
+export function composeEnquiryDetails(notes, specification = "") {
+  const personalNotes = String(notes || "").trim();
+  const selected = String(specification || "").trim();
+  if (!selected) return personalNotes;
+  return `Selected specification:\n${selected}${personalNotes ? `\n\nProject notes:\n${personalNotes}` : ""}`;
+}
 export function prepareEnquiry(fields) {
   const clean = (key) => String(fields[key] || "").trim();
   const name = clean("name"),

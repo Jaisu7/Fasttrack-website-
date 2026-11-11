@@ -13,6 +13,16 @@ export const smoothRange = (value, start, end) => {
   return t * t * (3 - 2 * t);
 };
 
+export function finishedReveal(seconds) {
+  const time = Math.max(0, Number.isFinite(seconds) ? seconds : 0);
+  const progress = clampProgress((time - 0.9) / 30);
+  return {
+    angle: Math.PI * 2 * progress * progress * (3 - 2 * progress),
+    phase: time < 0.9 ? "settling" : progress < 1 ? "rotating" : "settled",
+    complete: progress >= 1,
+  };
+}
+
 // Cabinet coordinates after the primary panel has been stood upright.
 // Shelves are revealed within the open shell, never passed through a side wall.
 export const cabinetInterior = {
